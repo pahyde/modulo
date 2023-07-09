@@ -1,0 +1,31 @@
+TODO:
+    - arg parsing 
+        - using argc and argv
+    - prompt loop
+        - simple while loop
+    - stdin i/o
+        - how do c programs handle input output streams
+        - how does the terminal process facilitate this? (it must right)
+    - filesys persistence  
+        - what syscalls do c programs use to write to disk (file descriptors?)
+        - where should program data be stored?
+            - linux: .config
+            - macOS, Windows: TBD
+        - (de)serialize struct data structure on reads and writes (today and tomorrow)
+            - cJson 
+        - Something like:
+            typedef struct {
+                char *name;
+                uint16_t wakeup;
+                char * today[100];
+                char *[] tomorrow;
+                uint32_t last_update
+            } ProgramData;
+    - system time (clock)
+
+program flow:
+init:
+    name (defaults to $USER in unix)
+    wakeup (defaults to 9am)
+
+modulus today: 
