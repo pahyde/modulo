@@ -1,19 +1,20 @@
-## Modulus
+# Modulus
 
+## Motivation
 Going to sleep after a day of lack-luster productivity is pretty difficult. 
-There's an insatiable need to keep going and finally push through on that last thing..
-But we all have limited capacity and sleep is a pretty good thing. 
+There's a need to keep going and finally push through on that last thing..
+But we all have limited capacity and sleep is important. 
 
 If only there was a way to channel the motivation at the end of one day into 
-the seemlingly infinite potential of the next. Like a modulus operator
+the infinite potential of the next. Like a modulus operator
 that could take the desire and energy at the last index of the day and map it 
 into the 0th index of the next.. yeah that would be great.
 
-Ok that sounds pretty epic but honestly this is just a neat little logging app
+Ok that sounds epic but honestly this is just a neat little logging app
 that lets you plan tasks for the next day! It's written in c and gives you a 
 interactive cli to add new tasks for the next day.
 
-Usage:
+## Usage:
 
 Modulus is a minimal productivity app designed for continuity! 
 It allows you to offload end-of-day thoughts, motivations, and goals onto tomorrows to-do list.
