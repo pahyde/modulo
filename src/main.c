@@ -6,19 +6,11 @@
 #include "command.h"
 
 int main(int argc, char **argv) {
-
     if (argc == 1) {
-        // modulus root command
-        // display minimal usage hints
-        printf("Modulus is a minimal productivity app designed for continuity!\n");
-        printf("It allows you to offload end-of-day thoughts, motivations, and goals onto tomorrows to-do list.\n"); 
-        printf("\n"); 
-        printf("Run `modulus init` to setup your user preferences.\n");
-        printf("Then run `modulus tomorrow` to start recording your thoughts for tomorrow!\n\n");
+        command_root();
         return 0;
     }
-    // primary command
-    char *cmd = argv[0];
+    char *cmd = argv[1];
     if (strcmp(cmd, INIT) == 0) {
         command_init(argc, argv);
     } else if (strcmp(cmd, SET) == 0) {

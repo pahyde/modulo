@@ -3,15 +3,20 @@ TARGET = main
 # Compiler
 CC = gcc
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c11
+CFLAGS = -Wall -Wextra -std=c11 -Wno-unused-parameter
 
 # Dirs
 BINDIR = ./bin
 SRCDIR = ./src
+INCDIR = $(SRCDIR)
 
-$(BINDIR)/$(TARGET): $(SRCDIR)/main.c
+# src files
+SRC := $(wildcard $(SRCDIR)/*.c)
+INC := $(wildcard $(INCDIR)/*.h)
+
+$(BINDIR)/$(TARGET): $(SRC) $(INC)
 	@mkdir -p $(BINDIR)
-	@$(CC) $(CFLAGS) $(SRCDIR)/main.c -o $(BINDIR)/$(TARGET)
+	@$(CC) $(CFLAGS) $(SRC) -o $(BINDIR)/$(TARGET)
 
 .PHONY: run
 run:

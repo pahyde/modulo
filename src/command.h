@@ -14,6 +14,7 @@
 
 #define REMOVE "remove"
 
+void command_root();
 void command_init(int argc, char **argv);
 
 void command_set(int argc, char **argv);

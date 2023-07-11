@@ -4,13 +4,17 @@
 #include <stdint.h>
 #include <time.h>
 
-typedef struct Modulus {
+typedef struct Modulo {
     char *username;
-    uint16_t wakeup;
-    char **today_entries;
-    char **tomorrow_entries;
+    time_t wakeup;
+    EntryList today;
+    EntryList tomorrow;
     time_t last_update;
-} Modulus;
+} Modulo;
 
+typedef struct EntryList {
+    int count;
+    char **entries;
+} EntryList;
 
 #endif

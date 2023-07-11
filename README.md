@@ -1,4 +1,4 @@
-# Modulus
+# Modulo
 
 ## Motivation
 Going to sleep after a day of lack-luster productivity is pretty difficult. 
@@ -6,7 +6,7 @@ There's a need to keep going and finally push through on that last thing..
 But we all have limited capacity and sleep is important. 
 
 If only there was a way to channel the motivation at the end of one day into 
-the infinite potential of the next. Like a modulus operator
+the infinite potential of the next. Like a modulo operator
 that could take the desire and energy at the last index of the day and map it 
 into the 0th index of the next.. yeah that would be great.
 
@@ -16,33 +16,33 @@ interactive cli to add new tasks for the next day.
 
 ## Usage:
 
-Modulus is a minimal productivity app designed for continuity! 
+modulo is a minimal productivity app designed for continuity! 
 It allows you to offload end-of-day thoughts, motivations, and goals onto tomorrows to-do list.
 
-Run the `modulus tomorrow` command and you will be prompted with an interactive loop to add new entries. 
+Run the `modulo tomorrow` command and you will be prompted with an interactive loop to add new entries. 
 Use the % character as a delimiter between entries. Type done when you're finished!
 
-These entries will then be available tomorrow via the `modulus today` command. 
-Modulus defines tomorrow using a wakeup time that you can configure.
+These entries will then be available tomorrow via the `modulo today` command. 
+modulo defines tomorrow using a wakeup time that you can configure.
 
-Modulus assumes a default wakeup time of 9am but this can be configured
-using either `modulus set wakeup` or `modulus init` (see below).
+modulo assumes a default wakeup time of 9am but this can be configured
+using either `modulo set wakeup` or `modulo init` (see below).
 
-You can also run `modulus peek` to view tomorrows entries today.
+You can also run `modulo peek` to view tomorrows entries today.
 
-If desired use `modulus remove 1` to remove entry 1 from tomorrows list.
+If desired use `modulo remove 1` to remove entry 1 from tomorrows list.
 
 Todays entries will be available for reflection and review until wakeup time tomorrow! 
 
 Commands
 
-Modulus init:
+modulo init:
     Sets username (Your name) and wakeup time parameters for the app. 
 
-Modulus tomorrow
+modulo tomorrow
 
-Modulus today
+modulo today
 
-Modulus set wakeup [8am, 1pm, 7:00]
+modulo set wakeup [8am, 1pm, 7:00]
 
-Modulus set name
+modulo set name
