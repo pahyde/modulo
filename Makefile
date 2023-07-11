@@ -4,6 +4,7 @@ TARGET = main
 CC = gcc
 # Compiler flags
 CFLAGS = -Wall -Wextra -std=c11 -Wno-unused-parameter
+LFLAGS = -lcjson
 
 # Dirs
 BINDIR = ./bin
@@ -16,7 +17,7 @@ INC := $(wildcard $(INCDIR)/*.h)
 
 $(BINDIR)/$(TARGET): $(SRC) $(INC)
 	@mkdir -p $(BINDIR)
-	@$(CC) $(CFLAGS) $(SRC) -o $(BINDIR)/$(TARGET)
+	@$(CC) $(CFLAGS) $(SRC) -o $@ $(LFLAGS)
 
 .PHONY: run
 run:

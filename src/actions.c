@@ -1,4 +1,5 @@
 #include "actions.h"
+#include "json.h"
 
 static time_t default_wakeup();
 

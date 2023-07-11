@@ -58,7 +58,6 @@ void command_set_username(char *username) {
     //update_name(modulo, username);
 
     save_modulo_or_exit(modulo, c);
-    write_data(modulo, c);
     free(modulo);
     free(c);
 
@@ -75,7 +74,6 @@ void command_set_wakeup(char *wakeup) {
     //uint16_t new_wakeup = modulo->wakeup;
 
     save_modulo_or_exit(modulo, c);
-    write_data(modulo, c);
     free(modulo);
     free(c);
 

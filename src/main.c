@@ -4,8 +4,16 @@
 
 #include "main.h"
 #include "command.h"
+#include "json.h"
+#include "actions.h"
 
 int main(int argc, char **argv) {
+    Modulo *modulo = create_default_modulo("test");
+    cJSON *json = modulo_to_json(modulo);
+    char *json_str = cJSON_Print(json);
+    printf("%s\n", json_str);
+    return 0;
+
     if (argc == 1) {
         command_root();
         return 0;
