@@ -14,12 +14,12 @@ typedef struct {
     char path_separator;
 } OSContext;
 
-// app dir
-#define APP_DATA_DIR "modulo"
-// app json filename
-#define APP_DATA_FILENAME "modulo.json"
-/*
+// app data dir
+#define MODULO_DIR "modulo"
+// app data filename
+#define MODULO_FILENAME "modulo.json"
 
+/*
 OS depdendent app data directories
 
 Linux: $XDG_CONFIG_HOME or "$HOME/.config"

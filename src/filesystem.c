@@ -2,10 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
 #include <cjson/cJSON.h>
 
 #include "filesystem.h"
+#include "json.h"
 #include "util.h"
 
 /*
@@ -33,13 +35,15 @@ int save_modulo(Modulo *modulo, OSContext *c) {
     // Modulo to json
     cJSON *json = modulo_to_json(modulo);
     // serialize json string
-    char *json_str = cJSON_Print(json_str);
-
+    char *json_str = cJSON_Print(json);
     char *filepath = c->modulo_json_filepath;
     if (write_text_data(json_str, filepath) == -1) {
         // filepath doesn't exist
         // create config_dir/modulo/modulo.json
-        create_modulo_dir(c);
+        if (create_modulo_dir(c) == -1) {
+            // failed to create modulo directory tree
+            return -1;
+        }
         if (write_text_data(json_str, filepath) == -1) {
             return -1;
         }
@@ -100,7 +104,7 @@ char *read_text_data(char *filepath) {
             fprintf(stderr, "Unknown error occurred while opening %s\n", filepath);
         }
     }
-    int size = 0;
+    size_t size = 0;
     size_t capacity = 1024; 
     char *text = malloc(capacity);
 
@@ -132,10 +136,30 @@ int write_text_data(char *text, char *filepath) {
             fprintf(stderr, "Unknown error occurred while opening %s\n", filepath);
         }
     }
-    if (fputs(text, filepath) == EOF) {
+    int status = fputs(text, fp);
+    fclose(fp);
+    if (status == EOF) {
         perror("Failed to write text to file\n");
         exit(EXIT_FAILURE);
     }
+    return 0;
+}
+
+int create_modulo_dir(OSContext *c) {
+    // create user config dir if it doesn't exist
+    if (mkdir(c->config_dir, 0755) == -1 && errno != EEXIST) {
+        return -1;
+    }
+    // create user modulo directory if it doesn't exist
+    if (mkdir(c->modulo_dir, 0755) == -1 && errno != EEXIST) {
+        return -1;
+    }
+    // create modulo.json if it doesn't exist
+    FILE *fp;
+    if ((fp = fopen(c->modulo_json_filepath, "w")) == NULL) {
+        return -1;
+    }
+    fclose(fp);
     return 0;
 }
 

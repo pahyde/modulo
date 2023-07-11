@@ -7,9 +7,10 @@ CFLAGS = -Wall -Wextra -std=c11 -Wno-unused-parameter
 LFLAGS = -lcjson
 
 # Dirs
-BINDIR = ./bin
-SRCDIR = ./src
-INCDIR = $(SRCDIR)
+SRCDIR  = ./src
+INCDIR  = $(SRCDIR)
+BINDIR  = ./bin
+DATADIR = $(HOME)/.config/modulo
 
 # src files
 SRC := $(wildcard $(SRCDIR)/*.c)
@@ -26,6 +27,7 @@ run:
 .PHONY: clean
 clean:
 	@rm -rf $(BINDIR)
+	@rm -rf $(DATADIR)
 
 .PHONY: all
 all: $(BINDIR)/$(TARGET)

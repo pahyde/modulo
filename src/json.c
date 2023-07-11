@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <cjson/cJSON.h>
 
 #include "json.h"
@@ -78,12 +80,15 @@ Modulo *json_to_modulo(cJSON *json) {
 }
 
 char *get_string_from_object(cJSON *json, char *name) {
-    cJSON *string = cJSON_GetObjectItemCaseSensitive(json, name);
-    if (string == NULL || !cJSON_IsString(string) || string->valuestring == NULL) {
+    cJSON *json_string = cJSON_GetObjectItemCaseSensitive(json, name);
+    if (json_string == NULL || !cJSON_IsString(json_string) || json_string->valuestring == NULL) {
         // Invalid json string
         return NULL;
     }
-    return string->valuestring;
+    char *c_string = json_string->valuestring;
+    char *c_string_cpy = malloc(strlen(c_string) + 1);
+    strcpy(c_string_cpy, c_string);
+    return c_string_cpy;
 }
 
 time_t get_time_t_from_object(cJSON *json, char *name) {
@@ -105,7 +110,7 @@ EntryList get_entry_list_from_object(cJSON *json, char *name) {
     }
 
     size_t capacity = 16;
-    int size = 0;
+    size_t size = 0;
     char **entries = malloc(capacity * sizeof(char *));
     cJSON *string;
 

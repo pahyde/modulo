@@ -31,19 +31,21 @@ void command_init(int argc, char **argv) {
     }
 }
 
+// TODO: set positional arguments = argc - 1
+// better readability
 void command_set(int argc, char **argv) {
-    if (argc < 3) {
+    if (argc < 4) {
         fprintf(stderr, "modulo set requires 1 additional command line arg.\n");
         fprintf(stderr, "Try `modulo set username` or `modulo set wakeup`.\n");
         exit(-1);
-    } else if (argc > 3) {
+    } else if (argc > 4) {
         fprintf(stderr, "modulo set requires 1 additional command line arg. %d supplied\n", argc-3);
         exit(-1);
     } 
     if (strcmp(argv[2], USERNAME) == 0) {
-        command_set_username(argv[2]);
+        command_set_username(argv[3]);
     } else if (strcmp(argv[2], WAKEUP) == 0) {
-        command_set_wakeup(argv[2]);
+        command_set_wakeup(argv[3]);
     } else {
         fprintf(stderr, "Unrecognized arg '%s' supplied to modulo set.\n", argv[2]);
         fprintf(stderr, "Try `modulo set name` or `modulo set wakeup`.\n");
@@ -54,15 +56,15 @@ void command_set(int argc, char **argv) {
 void command_set_username(char *username) {
     OSContext *c = get_context();
     Modulo *modulo = load_updated_modulo(c, false);
-    //char *prev_username = modulo->username;
-    //update_name(modulo, username);
+    char *prev_username = modulo->username;
+    update_username(modulo, username);
 
     save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
 
-    //printf("Successfully updated username!\n");
-    //printf("Previous username: %s, New username: %s\n", prev_username, username);
+    printf("Successfully updated username!\n");
+    printf("Previous username: %s, New username: %s\n", prev_username, username);
 }
 
 void command_set_wakeup(char *wakeup) {
@@ -163,15 +165,13 @@ Modulo *load_updated_modulo(OSContext *c, bool write_updates_to_disk) {
         char *username = get_system_username(c);
         modulo = create_default_modulo(username);
     }
-    if (!write_updates_to_disk) {
-        return;
-    }
-    if (save_modulo(modulo, c) == -1) {
+    if (write_updates_to_disk && save_modulo(modulo, c) == -1) {
         char *filepath = c->modulo_json_filepath;
         fprintf(stderr, "Failed to sync modulo data with disk\n");
         fprintf(stderr, "Error occured while attempting to write to %s\n", filepath);
         exit(EXIT_FAILURE);
     }
+    return modulo;
 }
 
 /*
