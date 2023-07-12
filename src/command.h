@@ -18,16 +18,21 @@
 #define REMOVE "remove"
 
 void command_root();
-void command_init(int argc, char **argv);
 
-void command_set(int argc, char **argv);
-void command_set_username(char *name);
-void command_set_wakeup(char *name);
+void command_set_preferences();
+void command_set_username(char *username);
+void command_set_wakeup(char *wakeup);
+void command_set_entry_delimiter(char *entry_delimiter);
 
-void command_tomorrow(int argc, char **argv);
-void command_today(int argc, char **argv);
-void command_peek(int argc, char **argv);
+void command_get_preferences();
+void command_get_username();
+void command_get_wakeup();
+void command_get_entry_delimiter();
 
-void command_remove(int argc, char **argv);
+void command_tomorrow();
+void command_today();
+void command_peek();
+
+void command_remove(char *entry_number);
 
 #endif

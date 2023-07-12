@@ -184,6 +184,8 @@ void unknown_sub_command(char **argv, char *sub_cmd, int parent_cmds) {
     the calling function has already validated 'modulo set username'
  */
 void check_argc(int argc, char **argv, int sub_cmds, int expected_args) {
+    // TODO: return -1 for error and remove exit()
+    // this way commands can add custom error messages if desired
     int actual_args = argc - (1+sub_cmds);
     if (actual_args < expected_args) {
         // not enough positional args
@@ -199,4 +201,12 @@ void check_argc(int argc, char **argv, int sub_cmds, int expected_args) {
         fprintf(stderr, "expected arg count: %d, actual arg count: %d\n", expected_args, actual_args);
         exit(1);
     }
+}
+
+void print_cmd_stderr(char **argv, int sub_cmds) {
+    fprintf(stderr, "`modulo");
+    for (int i = 0; i < sub_cmds; i++) {
+        fprintf(" %s", argv[i+1]);
+    }
+    fprintf(stderr, "`\n");
 }
