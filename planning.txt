@@ -88,4 +88,33 @@ The following preferences are set:
 
 update preferences with `modulo set preferences`
 
+Journaling
+----------
+
+modulo today
+You have 3 entries to review today
+
+1. 
+Lorem ipsem dolor ivet lendonor pervat at te sentin fan batcha lin gemlin
+olor ivet lendonor pervat at te sentin fan batcha lin gemlin
+Lorem ipsem dolor ivet lendonor pervat at te sentin fan batcha lin gemlin
+
+2. 
+sdfgdsfg
+
+3. 
+olor ivet lendonor pervat at te sentin fan batcha lin gemlin
+Lorem ipsem dolor ivet lendonor pervat at te sentin fan batcha lin gemlin
+sdfgdsfg
+
+
+modulo tomorrow
+
+The modulo tomorrow command let's you journal your thoughts as they come to you. 
+These entries will be available via the `modulo today` command after 08:30 AM tomorrow (your wakeup time).
+
+Compose your entry below. Then type the entry_delimiter (%) to save your entry and start the next
+Type `done` to abort
+
+Entry 1:
 
