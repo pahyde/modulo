@@ -36,18 +36,29 @@ void command_init(int argc, char **argv) {
 
 // TODO: set positional arguments = argc - 1
 // better readability
+// modulo set username night_owl
+// modulo set preferences
 void command_set(int argc, char **argv) {
-    if (argc < 4) {
-        fprintf(stderr, "modulo set requires 1 additional command line arg.\n");
-        fprintf(stderr, "Try `modulo set username` or `modulo set wakeup`.\n");
-        exit(-1);
+    if (argc < 3) {
+        fprintf(stderr, "modulo set requires at least 2 positional args.\n");
+        fprintf(stderr, "Try `modulo set preferences` to set all preferences`.\n");
+        exit(1);
     } else if (argc > 4) {
-        fprintf(stderr, "modulo set requires 1 additional command line arg. %d supplied\n", argc-3);
-        exit(-1);
+        fprintf(stderr, "modulo set requires at most 3 positional args.\n");
+        fprintf(stderr, "Too many positions args (%d supplied).\n", argc-1);
+        exit(1);
     } 
-    if (strcmp(argv[2], USERNAME) == 0) {
+    if (strcmp(argv[2], PREFERENCES) == 0) {
+        if (argc == 3) {
+            fprintf("modulo set preferences requires 0 additional arguments. %d were supplied\n", argc-3);
+        } else {
+            command_set_preferences();
+        }
+    } else if (strcmp(argv[2], USERNAME) == 0) {
         command_set_username(argv[3]);
     } else if (strcmp(argv[2], WAKEUP) == 0) {
+        command_set_wakeup(argv[3]);
+    } else if (strcmp(argv[2], ENTRY_DELIMITER) == 0) {
         command_set_wakeup(argv[3]);
     } else {
         fprintf(stderr, "Unrecognized arg '%s' supplied to modulo set.\n", argv[2]);

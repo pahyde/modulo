@@ -5,8 +5,11 @@
 #define INIT "init"
 
 #define SET "set"
+#define GET "get"
+#define PREFERENCES "preferences"
 #define USERNAME "username"
 #define WAKEUP "wakeup"
+#define ENTRY_DELIMITER "entry_delimiter"
 
 #define TOMORROW "tomorrow"
 #define TODAY "today"

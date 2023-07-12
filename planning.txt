@@ -130,7 +130,7 @@ if (entries.count > 0) {
     Run `modulo remove` to remove an entry
 } else {
     You haven't submitted any entries today
-    Run `modulo tomorrow`to create your first entry.
+    Run `modulo tomorrow` to create your first entry.
 }
 
 modulo remove 2
