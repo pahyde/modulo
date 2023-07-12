@@ -25,6 +25,9 @@ void command_root() {
     printf("Then run `modulo tomorrow` to start recording your thoughts for tomorrow!\n\n");
 }
 
+/*
+    tentative TODO: remove this command (replaced with modulo set preferences)
+*/
 void command_init(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "modulo init requires 0 additional command line args. %d supplied\n", argc-2);

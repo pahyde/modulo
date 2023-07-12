@@ -23,9 +23,69 @@ TODO:
             } ProgramData;
     - system time (clock)
 
-program flow:
-init:
-    name (defaults to $USER in unix)
-    wakeup (defaults to 9am)
+modulo set
+----------
+modulo set username
+Successfully updated username!
+Previous username: phyde, New username: 
 
-modulus today: 
+modulo set wakeup 8:15
+Successfully updated wakeup time!
+Previous wakeup: 09:00 AM, New wakeup: 08:15 AM
+
+modulo set entry_delimiter jj
+Successfully updated entry delimiter!
+Previous deilimiter: %, New delimiter: jj
+
+modulo set preferences (sets username and wakeup)
+This utility helps you update your user preferences.
+type `done` at any time to abort
+
+The following preferences are set:
+    1. username: early_riser
+    2. wakeup: 07:00 AM
+    3. entry_delimiter: %
+
+Enter a number to set a preference: 1
+
+Current username: early_riser
+Enter a new username (or submit an empty string to select a different preference).
+
+new username: night_owl
+
+Successfully updated username to night_owl!
+
+The following preferences are set:
+    1. username: night_owl
+    2. wakeup: 07:00 AM
+    3. entry_delimiter: %
+
+Enter a number to set a preference: 2
+
+Current wakeup: 10am
+Enter a new wakeup time (or submit an empty string to select a different preference).
+
+new wakeup: 10am
+
+Successfully updated wakeup to 09:00 AM!
+
+modulo get
+----------
+modulo get username
+Current username: night_owl
+
+modulo get wakeup
+Current wakeup: 10am
+
+modulo get entry_delimiter
+Current entry_delimiter: %
+
+modulo get preferences (gets username and wakeup)
+The following preferences are set:
+    1. username: night_owl
+    2. wakeup: 07:00 AM
+    3. entry_delimiter: %
+
+update preferences with `modulo set preferences`
+
+
