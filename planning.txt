@@ -109,12 +109,42 @@ sdfgdsfg
 
 
 modulo tomorrow
-
 The modulo tomorrow command let's you journal your thoughts as they come to you. 
 These entries will be available via the `modulo today` command after 08:30 AM tomorrow (your wakeup time).
 
-Compose your entry below. Then type the entry_delimiter (%) to save your entry and start the next
+(entries.count > 0 && You've created 2 entries today so far.)
+
+Compose your entry below. Then type the entry_delimiter (%) to save your entry and start the next.
 Type `done` to abort
 
 Entry 1:
+Lorem ipsem dolor %
 
+modulo peek
+if (entries.count > 0) {
+    You've created 2 entries today so far.
+    1.
+    I learned alot more that expected tod...
+
+    Run `modulo tomorrow` to add new entries 
+    Run `modulo remove` to remove an entry
+} else {
+    You haven't submitted any entries today
+    Run `modulo tomorrow`to create your first entry.
+}
+
+modulo remove 2
+You are attempting to remove
+
+2. Lorum ipsem dolor ivan getenth ber.. 
+
+Type "yes" to permanently remove this entry. 
+Anything else will abort the removal.
+
+Remove this entry? (type "yes"): yes
+
+if (yes) {
+    Successfully removed entry 2!
+} else if (anything else typed) {
+    Aborting due to response {response}
+}
