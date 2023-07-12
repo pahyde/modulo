@@ -50,6 +50,7 @@ void command_set(int argc, char **argv) {
     } 
     if (strcmp(argv[2], PREFERENCES) == 0) {
         if (argc == 3) {
+            command_set_preferences();
             fprintf("modulo set preferences requires 0 additional arguments. %d were supplied\n", argc-3);
         } else {
             command_set_preferences();
