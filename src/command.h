@@ -1,22 +1,6 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-/* modulus command keywords */
-#define INIT "init"
-
-#define SET "set"
-#define GET "get"
-#define PREFERENCES "preferences"
-#define USERNAME "username"
-#define WAKEUP "wakeup"
-#define ENTRY_DELIMITER "entry_delimiter"
-
-#define TOMORROW "tomorrow"
-#define TODAY "today"
-#define PEEK "peek"
-
-#define REMOVE "remove"
-
 void command_root();
 
 void command_set_preferences();

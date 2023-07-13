@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "main.h"
-#include "command.h"
+#include "modulo.h"
+#include "command_router.h"
 #include "json.h"
-#include "actions.h"
+#include "modulo.h"
+
 
 static void route_set(int argc, char **argv);
 static void route_set_preferences(int argc, char **argv);
@@ -40,17 +41,17 @@ void route_command(int argc, char **argv) {
         return 0;
     }
     char *sub_cmd = argv[1];
-    if (strcmp(sub_cmd, SET) == 0) {
+    if (strcmp(sub_cmd, COMMAND_SET) == 0) {
         route_set(argc, argv);
-    } else if (strcmp(sub_cmd, GET) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_GET) == 0) {
         route_get(argc, argv);
-    } else if (strcmp(sub_cmd, TOMORROW) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_TOMORROW) == 0) {
         route_tomorrow(argc, argv);
-    } else if (strcmp(sub_cmd, TODAY) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_TODAY) == 0) {
         route_today(argc, argv);
-    } else if (strcmp(sub_cmd, PEEK) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_PEEK) == 0) {
         route_peek(argc, argv);
-    } else if (strcmp(sub_cmd, REMOVE) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_REMOVE) == 0) {
         route_remove(argc, argv);
     } else {
         int parent_cmds = 0;
@@ -60,12 +61,12 @@ void route_command(int argc, char **argv) {
 
 void route_set(int argc, char **argv) {
     if (argc < 3) {
-        fprintf(stderr, "modulo set requires at least 2 positional args.\n");
+        fprintf(stderr, "modulo set requires a subcommand.\n");
         fprintf(stderr, "Try `modulo set preferences` to set all preferences`.\n");
         exit(1);
     }
     char *sub_cmd = argv[2];
-    if (strcmp(sub_cmd, PREFERENCES) == 0) {
+    if (strcmp(sub_cmd, COMMAND_PREFERENCES) == 0) {
         route_set_preferences(argc, argv);
     } else {
         route_set_preference(argc, argv);
@@ -76,20 +77,20 @@ void route_set_preferences(int argc, char **argv) {
     int sub_cmds = 2;
     int args = 0;
     check_argc(argc, argv, sub_cmds, args);
-    command_set_preferences(argc, argv);
+    command_set_preferences();
 }
 
 void route_set_preference(int argc, char **argv) {
     char *sub_cmd = argv[2];
     int sub_cmds = 2;
     int args = 1;
-    if (strcmp(sub_cmd, USERNAME) == 0) {
+    if (strcmp(sub_cmd, COMMAND_USERNAME) == 0) {
         check_argc(argc, argv, sub_cmds, args);
         command_set_username(argv[3]);
-    } else if (strcmp(sub_cmd, WAKEUP) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_WAKEUP) == 0) {
         check_argc(argc, argv, sub_cmds, args);
         command_set_wakeup(argv[3]);
-    } else if (strcmp(sub_cmd, ENTRY_DELIMITER) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_ENTRY_DELIMITER) == 0) {
         check_argc(argc, argv, sub_cmds, args);
         command_set_entry_delimiter(argv[3]);
     } else {
@@ -100,15 +101,15 @@ void route_set_preference(int argc, char **argv) {
 
 void route_get(int argc, char **argv) {
     if (argc < 3) {
-        fprintf(stderr, "modulo set requires at least 2 positional args.\n");
-        fprintf(stderr, "Try `modulo set preferences` to set all preferences`.\n");
+        fprintf(stderr, "modulo get requires a subcommand.\n");
+        fprintf(stderr, "Try `modulo get preferences` to see your current preferences`.\n");
         exit(1);
     }
     char *sub_cmd = argv[2];
-    if (strcmp(sub_cmd, PREFERENCES) == 0) {
-        route_set_preferences(argc, argv);
+    if (strcmp(sub_cmd, COMMAND_PREFERENCES) == 0) {
+        route_get_preferences(argc, argv);
     } else {
-        route_set_preference(argc, argv);
+        route_get_preference(argc, argv);
     }
 }
 
@@ -116,22 +117,22 @@ void route_get_preferences(int argc, char **argv) {
     int sub_cmds = 2;
     int args = 0;
     check_argc(argc, argv, sub_cmds, args);
-    command_set_preferences(argc, argv);
+    command_set_preferences();
 }
 
 void route_get_preference(int argc, char **argv) {
     char *sub_cmd = argv[2];
     int sub_cmds = 2;
-    int args = 1;
-    if (strcmp(sub_cmd, USERNAME) == 0) {
+    int args = 0;
+    if (strcmp(sub_cmd, COMMAND_USERNAME) == 0) {
         check_argc(argc, argv, sub_cmds, args);
-        command_get_username(argv[3]);
-    } else if (strcmp(sub_cmd, WAKEUP) == 0) {
+        command_get_username();
+    } else if (strcmp(sub_cmd, COMMAND_WAKEUP) == 0) {
         check_argc(argc, argv, sub_cmds, args);
-        command_get_wakeup(argv[3]);
-    } else if (strcmp(sub_cmd, ENTRY_DELIMITER) == 0) {
+        command_get_wakeup();
+    } else if (strcmp(sub_cmd, COMMAND_ENTRY_DELIMITER) == 0) {
         check_argc(argc, argv, sub_cmds, args);
-        command_get_entry_delimiter(argv[3]);
+        command_get_entry_delimiter();
     } else {
         int parent_cmds = 1;
         unknown_sub_command(argv, sub_cmd, parent_cmds);
@@ -149,25 +150,26 @@ void route_today(int argc, char **argv) {
     int sub_cmds = 1;
     int args = 0;
     check_argc(argc, argv, sub_cmds, args);
-    command_today(argc, argv);
+    command_today();
 }
 
 void route_peek(int argc, char **argv) {
     int sub_cmds = 1;
     int args = 0;
     check_argc(argc, argv, sub_cmds, args);
-    command_peek(argc, argv);
+    command_peek();
 }
 
 void route_remove(int argc, char **argv) {
     int sub_cmds = 1;
     int args = 1;
     check_argc(argc, argv, sub_cmds, args);
-    command_remove(argc, argv);
+    char *entry_number = argv[2];
+    command_remove(entry_number);
 }
 
 void unknown_sub_command(char **argv, char *sub_cmd, int parent_cmds) {
-    fprintf(stderr, "Error: unknown command %s for \"", sub_cmd);
+    fprintf(stderr, "Error: unknown command \"%s\" for \"", sub_cmd);
     fprintf(stderr, "modulo");
     for (int i = 0; i < parent_cmds; i++) {
         fprintf(stderr, " %s", argv[i+1]);
@@ -206,7 +208,7 @@ void check_argc(int argc, char **argv, int sub_cmds, int expected_args) {
 void print_cmd_stderr(char **argv, int sub_cmds) {
     fprintf(stderr, "`modulo");
     for (int i = 0; i < sub_cmds; i++) {
-        fprintf(" %s", argv[i+1]);
+        fprintf(stderr, " %s", argv[i+1]);
     }
     fprintf(stderr, "`\n");
 }

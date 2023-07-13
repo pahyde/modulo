@@ -6,9 +6,12 @@
 #include <errno.h>
 #include <cjson/cJSON.h>
 
+#include "modulo.h"
 #include "filesystem.h"
 #include "json.h"
 #include "util.h"
+
+static char *path_join(char *path1, char *path2, char separator);
 
 /*
     Loads Modulo struct from config_dir/modulo.json file if it exists
@@ -112,7 +115,7 @@ char *read_text_data(char *filepath) {
     while (fgets(buffer, sizeof buffer, fp) != NULL) {
         if (size + 1024 > capacity) {
             capacity *= 2;
-            realloc(text, capacity);
+            text = realloc(text, capacity);
         }
         strcpy(text + size, buffer);
         size += strlen(buffer);
@@ -134,6 +137,7 @@ int write_text_data(char *text, char *filepath) {
         } else {
             // unknown error
             fprintf(stderr, "Unknown error occurred while opening %s\n", filepath);
+            exit(1);
         }
     }
     int status = fputs(text, fp);
@@ -165,4 +169,19 @@ int create_modulo_dir(OSContext *c) {
 
 char *get_system_username(OSContext *c) {
     return getenv(c->user_env_var);
+}
+
+char *path_join(char *path1, char *path2, char separator) {
+    size_t length1 = strlen(path1);
+    size_t length2 = strlen(path2);
+    char *joined = malloc(length1 + length2 + 2);
+    for (size_t i = 0; i < length1; i++) {
+        joined[i] = path1[i];
+    }
+    joined[length1] = separator;
+    for (size_t i = 0; i < length2; i++) {
+        joined[length1+1+i] = path2[i];
+    }
+    joined[length1 + length2 + 1] = '\0';
+    return joined;
 }

@@ -72,7 +72,7 @@ Successfully updated wakeup to 09:00 AM!
 modulo get
 ----------
 modulo get username
-Current username: night_owl
+current username: night_owl
 
 modulo get wakeup
 Current wakeup: 10am

@@ -1,7 +1,7 @@
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
-#include "main.h"
+#include "modulo.h"
 
 typedef struct {
     /* os depdendent config directory */

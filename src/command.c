@@ -3,10 +3,10 @@
 #include <string.h>
 #include <cjson/cJSON.h>
 
-#include "main.h"
+#include "modulo.h"
 #include "command.h"
 #include "filesystem.h"
-#include "actions.h"
+#include "modulo.h"
 #include "util.h"
 
 /*
@@ -37,8 +37,10 @@ void command_set_preferences() {
 void command_set_username(char *username) {
     OSContext *c = get_context();
     Modulo *modulo = load_updated_modulo(c, false);
-    char *prev_username = modulo->username;
-    update_username(modulo, username);
+
+    char prev_username[USER_NAME_MAX_LEN + 1];
+    strcpy(prev_username, modulo_get_username(modulo));
+    modulo_set_username(modulo, username);
 
     save_modulo_or_exit(modulo, c);
     free(modulo);
@@ -68,6 +70,13 @@ void command_set_entry_delimiter(char *entry_delimiter) {
     OSContext *c = get_context();
     Modulo *modulo = load_updated_modulo(c, false);
 
+    char prev_entry_delimiter[DELIMITER_MAX_LEN+1];
+    strcpy(prev_entry_delimiter, modulo_get_entry_delimiter(modulo));
+    modulo_set_entry_delimiter(modulo, entry_delimiter);
+
+    printf("Successfully updated entry_delimiter!\n");
+    printf("Previous entry_delimiter: %s, New entry_delimiter: %s\n", prev_entry_delimiter, entry_delimiter);
+
     save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
@@ -86,6 +95,8 @@ void command_get_username() {
     OSContext *c = get_context();
     Modulo *modulo = load_updated_modulo(c, true);
 
+    printf("Current username: %s\n", modulo_get_username(modulo));
+
     save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
@@ -103,6 +114,8 @@ void command_get_wakeup() {
 void command_get_entry_delimiter() {
     OSContext *c = get_context();
     Modulo *modulo = load_updated_modulo(c, true);
+
+    printf("Current entry_delimiter: %s\n", modulo_get_entry_delimiter(modulo));
 
     save_modulo_or_exit(modulo, c);
     free(modulo);
@@ -165,14 +178,14 @@ void command_remove(char *entry_number) {
 Modulo *load_updated_modulo(OSContext *c, bool write_updates_to_disk) {
     Modulo *modulo = load_modulo(c);
     if (modulo != NULL) {
-        if (write_updates_to_disk && !out_of_sync(modulo)) {
+        if (write_updates_to_disk && !modulo_out_of_sync(modulo)) {
             // data is up to date so no need to write
             write_updates_to_disk = false;
         } else {
             // data may or may not be up-to-date
             // we're not writing to disk though so we just call sync
             // and skip an unnecessary out_of_sync check
-            sync(modulo);
+            modulo_sync(modulo);
         }
     } else {
         char *username = get_system_username(c);

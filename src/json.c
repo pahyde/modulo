@@ -4,29 +4,20 @@
 #include <cjson/cJSON.h>
 
 #include "json.h"
-#include "main.h"
+#include "modulo.h"
+
 
 /*
-typedef struct Modulo {
-    char *username;
-    time_t wakeup;
-    EntryList today;
-    entry_list tomorrow;
-    time_t last_update;
-} Modulo;
-
-typedef struct entry_list {
-    int count;
-    char **entries;
-}
 
 json {
     username: string
     wakeup: number (seconds)
+    entry_delimiter: string
     today: [string]
     tomorrow: [string]
     last_update: number (seconds)
 }
+
 */
 
 // json to modulo helpers
@@ -40,41 +31,46 @@ static cJSON *add_entry_list_to_object(cJSON *json, const char *name, EntryList 
 Modulo *json_to_modulo(cJSON *json) {
     Modulo *modulo = malloc(sizeof(Modulo));
 
-    char *username = get_string_from_object(json, USERNAME);
+    char *username = get_string_from_object(json, MODULO_USERNAME);
     if (username == NULL) {
         cJSON_Delete(json);
         return NULL;
     }
 
-    time_t wakeup = get_time_t_from_object(json, WAKEUP);
+    time_t wakeup = get_time_t_from_object(json, MODULO_WAKEUP);
     if (wakeup == -1) {
         cJSON_Delete(json);
         return NULL;
     }
 
-    EntryList today = get_entry_list_from_object(json, TODAY);
+    char *entry_delimiter = get_string_from_object(json, MODULO_ENTRY_DELIMITER);
+    if (username == NULL) {
+        cJSON_Delete(json);
+        return NULL;
+    }
+
+    EntryList today = get_entry_list_from_object(json, MODULO_TODAY);
     if (today.count == -1) {
         cJSON_Delete(json);
         return NULL;
     }
 
-    EntryList tomorrow = get_entry_list_from_object(json, TOMORROW);
+    EntryList tomorrow = get_entry_list_from_object(json, MODULO_TOMORROW);
     if (tomorrow.count == -1) {
         cJSON_Delete(json);
         return NULL;
     }
 
-    time_t last_update = get_time_t_from_object(json, LAST_UPDATE);
+    time_t last_update = get_time_t_from_object(json, MODULO_LAST_UPDATE);
     if (last_update == -1) {
         cJSON_Delete(json);
         return NULL;
     }
-    modulo->username = username;
-    modulo->wakeup = wakeup;
-    modulo->today = today;
-    modulo->tomorrow = tomorrow;
-    modulo->last_update = last_update;
-
+    modulo_set_username(modulo, username);
+    modulo_set_wakeup(modulo, wakeup);
+    modulo_set_entry_delimiter(modulo, entry_delimiter);
+    modulo_set_today_entries(modulo, today);
+    modulo_set_tomorrow_entries(modulo, today);
     cJSON_Delete(json);
     return modulo;
 }
@@ -105,28 +101,28 @@ time_t get_time_t_from_object(cJSON *json, char *name) {
 EntryList get_entry_list_from_object(cJSON *json, char *name) {
     cJSON *array = cJSON_GetObjectItemCaseSensitive(json, name);
     if (array == NULL || !cJSON_IsArray(array)) {
-        EntryList err = { -1, NULL };
+        EntryList err = { -1, -1, NULL };
         return err;
     }
 
-    size_t capacity = 16;
-    size_t size = 0;
+    size_t capacity = ENTRY_LIST_CAPACITY;
+    size_t count = 0;
     char **entries = malloc(capacity * sizeof(char *));
-    cJSON *string;
 
+    cJSON *string;
     cJSON_ArrayForEach(string, array) {
         if (!cJSON_IsString(string) || string->valuestring == NULL) {
             // Invalid string array element
-            EntryList err = { -1, NULL };
+            EntryList err = { -1, -1, NULL };
             return err;
         }
-        if (size == capacity) {
+        if (count == capacity) {
             capacity *= 2;
             entries = realloc(entries, capacity);
         }
-        entries[size++] = string->valuestring;
+        entries[count++] = string->valuestring;
     }
-    EntryList entry_list = { size, entries };
+    EntryList entry_list = { capacity, count, entries };
     return entry_list;
 }
 
@@ -134,31 +130,37 @@ cJSON *modulo_to_json(Modulo *modulo) {
     cJSON *json = cJSON_CreateObject(); 
 
     // add username to JSON
-    if (cJSON_AddStringToObject(json, USERNAME, modulo->username) == NULL) {
+    if (cJSON_AddStringToObject(json, MODULO_USERNAME, modulo->username) == NULL) {
         cJSON_Delete(json);
         return NULL;
     }
 
     // add wakeup to JSON
-    if (cJSON_AddNumberToObject(json, WAKEUP, modulo->wakeup) == NULL) {
+    if (cJSON_AddNumberToObject(json, MODULO_WAKEUP, modulo->wakeup) == NULL) {
+        cJSON_Delete(json);
+        return NULL;
+    }
+
+    // add entry_delimiter to JSON
+    if (cJSON_AddStringToObject(json, MODULO_ENTRY_DELIMITER, modulo->entry_delimiter) == NULL) {
         cJSON_Delete(json);
         return NULL;
     }
 
     // add today entries to JSON
-    if (add_entry_list_to_object(json, TODAY, modulo->today) == NULL) {
+    if (add_entry_list_to_object(json, MODULO_TODAY, modulo->today) == NULL) {
         cJSON_Delete(json);
         return NULL;
     }
 
     // add tomorrow entries to JSON
-    if (add_entry_list_to_object(json, TOMORROW, modulo->tomorrow) == NULL) {
+    if (add_entry_list_to_object(json, MODULO_TOMORROW, modulo->tomorrow) == NULL) {
         cJSON_Delete(json);
         return NULL;
     }
 
     // add last_update to JSON
-    if (cJSON_AddNumberToObject(json, LAST_UPDATE, modulo->last_update) == NULL) {
+    if (cJSON_AddNumberToObject(json, MODULO_LAST_UPDATE, modulo->last_update) == NULL) {
         cJSON_Delete(json);
         return NULL;
     }
@@ -171,7 +173,7 @@ cJSON *add_entry_list_to_object(cJSON *json, const char *name, EntryList entry_l
         return NULL;
     }
     char **entries = entry_list.entries;
-    for (int i = 0; i < entry_list.count; i++) {
+    for (int i = 0; i < entry_list.count && i < 0; i++) {
         cJSON *string = cJSON_CreateString(entries[i]);
         if (string == NULL) {
             // failed to create json string for entry

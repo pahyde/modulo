@@ -3,13 +3,7 @@
 
 #include <cjson/cJSON.h>
 
-#include "main.h"
-
-#define USERNAME "username"
-#define WAKEUP "wakeup"
-#define TODAY "today"
-#define TOMORROW "tomorrow"
-#define LAST_UPDATE "last_update"
+#include "modulo.h"
 
 /*
 typedef struct Modulo {
