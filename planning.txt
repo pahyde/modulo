@@ -69,6 +69,30 @@ new wakeup: 10am
 
 Successfully updated wakeup to 09:00 AM!
 
+Errors:
+username [
+    Oops, the username "night_owlllllll..." is too long! Usernames must be 31 characters or less. 
+]
+
+wakeup [
+    Error parsing wakeup time: 730am
+    Your input must match one of the following formats:
+    AM/PM:
+        1. %H(am|pm)
+        2. %H:%M(am|pm)
+    24-Hour:
+        3. %H
+        4. %H:%M
+    
+    Note that white space and leading zeros are optional. Also matching is case insensitive.
+    i.e. "9am", "009:00 AM", "9:00am", and "9 : 00" are all valid.
+]
+
+entry_delimiter [
+    Oops, entry_delimiter is too long. The delimiter must be 15 characters or less
+]
+
+
 modulo get
 ----------
 modulo get username
