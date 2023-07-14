@@ -23,15 +23,73 @@ TODO:
             } ProgramData;
     - system time (clock)
 
+On wakeup with unread entries:
+    "You have unread entries..."
+
+----------------------------------------------
+Welcome! Modulo is a productivity app built to bridge the 
+gap between todays thoughts and tomorrows actions!
+
+It's like a personal messaging system for sending
+thoughts to the future and reading thoughts from the past.
+
+Here's how it works. 
+
+Modulo maintains two "entry lists"
+    1. today
+    2. tomorrow
+
+The today list contains entries written yesterday to be read today
+the tomorrow list contains entries written today to be read tomorrow
+
+As an example, you might run the command 
+
+`modulo tomorrow` 
+
+to add some to-do items you want to do tomorrow
+
+Then tomorrow, you can run
+
+`modulo wakeup` 
+`modulo today`
+
+to review the to-do entries. 
+
+The `modulo wakeup` command tells modulo that you're ready to begin a new day. 
+This removes ambiguity when you start a new day at a time between wakeup_earliest and wakeup_latest 
+(preferences which we will configure).
+
+However Modulo will automatically begin a new day after wakeup_latest.
+This means you can set wakeup_earliest = wakeup_latest to avoid
+typing modulo_wakeup if you prefer!
+
+Let's configure your wakeup range. 
+You can type 12-hour times like 9am, 9:30am or 24-hour times like 14:30
+
+Enter the earliest time you plan to wake up. 
+
+wakeup_earliest: 
+
+Now set the latest time you pland to wake up.
+
+wakeup_latest: 
+
+
+----------------------------------------------
+
 modulo set
 ----------
 modulo set username
 Successfully updated username!
 Previous username: phyde, New username: 
 
-modulo set wakeup 8:15
-Successfully updated wakeup time!
-Previous wakeup: 09:00 AM, New wakeup: 08:15 AM
+modulo set wakeup_earliest 5:00
+Successfully updated wakeup_earliest preference!
+Previous wakeup_earliest: 07:00 AM, New wakeup_earliest: 08:15 AM
+
+modulo set wakeup_latest 12pm
+Successfully updated wakeup_latest preference!
+Previous wakeup_latest: 09:00 AM, New wakeup_latest: 12:00 PM
 
 modulo set entry_delimiter jj
 Successfully updated entry delimiter!
@@ -43,7 +101,8 @@ type `done` at any time to abort
 
 The following preferences are set:
     1. username: early_riser
-    2. wakeup: 07:00 AM
+    2. wakeup_earliest: 05:00 AM
+    2. wakeup_latest: 12:00 PM
     3. entry_delimiter: %
 
 Enter a number to set a preference: 1

@@ -29,7 +29,7 @@ modulo {
 }
 
 today = day_number(now, modulo->wakeup)
-if (new_today >= old_tomorrow) {
+if (today >= old_tomorrow) {
     // Modulo is out of sync by at least one day
     // today_entries <- tomorrow_entries
     // tomorrow_entries <- empty entry_list

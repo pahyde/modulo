@@ -25,12 +25,48 @@ typedef struct EntryList {
 
 typedef struct Modulo {
     char username[USER_NAME_MAX_LEN + 1];
-    time_t wakeup;
+    // wakeup time (minutes)
+    int wakeup;
+    // the delimiter used to separate journal entries
     char entry_delimiter[DELIMITER_MAX_LEN + 1];
+    /*
+    EntryList today:
+    The entries available for review today.
+    These are usually the entries written yesterday
+    If the user skips a day, they will be the most 
+    recent unread set of entries. 
+    */
     EntryList today;
+    /* 
+    EntryList tomorrow:
+    The entries written today that will be available tomorrow 
+    */
     EntryList tomorrow;
-    time_t last_update;
+    /* 
+    Today and Tomorrow ptrs (Used for syncing) 
+    Points to the utc day number the the respective 
+    today and tomorrow entries were (or will be) made available 
+    */
+    int today_ptr;
+    int tomorrow_ptr;
 } Modulo;
+
+/*
+   Setting wakeup time only effects "tomorrow's" wakeup
+   td     tm
+   wk     wk
+   >>>>>t
+   
+   set wakeup time an hour earlier
+   td   tm
+   wk   wk
+   >>>>>t
+
+        td   tm
+        wk   wk
+        >>>>>t
+*/
+
 
 Modulo *create_default_modulo(char *username);
 void free_modulo(Modulo *modulo);
