@@ -147,7 +147,7 @@ void modulo_sync(Modulo *modulo) {
     modulo_sync_with_timestamp(modulo, now);
 }
 void modulo_sync_with_timestamp(Modulo *modulo, time_t now) {
-
+    
 }
 
 void check_length(char *string, int max_length, char *message) {
