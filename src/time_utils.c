@@ -66,6 +66,66 @@ int cmp(tm time_1, tm time_2);
 time_t parse_time(char *)
 */
 
+/*
+    Your input must match one of the following formats:
+    AM/PM:
+        1. %H(am|pm)
+        2. %H:%M(am|pm)
+    24-Hour:
+        3. %H
+        4. %H:%M
+    
+    Note that white space and leading zeros are optional. Also matching is case insensitive.
+    i.e. "9am", "009:00 AM", "9:00am", and "9 : 00" are all valid.
+*/
+
+time_t get_most_recent(int time_minutes) {
+    time_t now = time(NULL);
+    struct tm *local_time = localtime(&now);
+    
+}
+
+int parse_time(char *time_str) {
+    int hour = 0;
+    int minute = 0;
+    char am_pm[3] = {0};
+    int matches = 0;
+    // scan for hh:mm [am|pm] format
+    matches = sscanf(time_str, "%d : %d %2s", &hour, &minute, am_pm);
+    if (matches == 3) {
+        return parse_12_time(hour, minute, am_pm);
+    } else if (matches == 2) {
+        return parse_24_time(hour, minute);
+    }
+    // scan for hh [am|pm] format
+    matches = sscanf(time_str, "%d %2s", &hour, am_pm);
+    if (matches == 2) {
+        return parse_12_time(hour, minute, am_pm);
+    } else if (matches == 1) {
+        return parse_24_time(hour, minute);
+    }
+    return -1;
+}
+
+int parse_12_time(int hour, int minute, char *am_pm) {
+    if (strlen(am_pm) != 2) {
+        return -1;
+    }
+    if (tolower(am_pm[1]) != 'm') {
+        return -1;
+    }
+    if (tolower(am_pm[0]) == 'a') {
+        return parse_24_time(hour % 12, minute);
+    }
+    if (tolower(am_pm[0]) == 'p') {
+        return parse_24_time(12 + hour % 12, minute);
+    }
+}
+
+int parse_24_time(int hour, int minute) {
+    return hour * 60 + minute;
+}
+
 char *format_time(int time_minutes) {
     // hh:mm AM (hh:mm)
     char *formatted = malloc(FORMAT_TIME_LENGTH+1);
@@ -75,8 +135,4 @@ char *format_time(int time_minutes) {
     char *am_pm = hours_24 < 12 ? "AM" : "PM";
     sprintf(formatted, "%02d:%02d %s (%02d:%02d)", hours_12, minutes, am_pm, hours_24, minutes);
     return formatted;
-}
-
-time_t parse_time(char *time_str) {
-
 }

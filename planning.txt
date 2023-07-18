@@ -56,7 +56,7 @@ Then tomorrow, you can run
 to review the to-do entries. 
 
 The `modulo wakeup` command tells modulo that you're ready to begin a new day. 
-This removes ambiguity when you start a new day at a time between wakeup_earliest and wakeup_latest 
+This is required when you start a new day at a time between wakeup_earliest and wakeup_latest 
 (preferences which we will configure).
 
 However Modulo will automatically begin a new day after wakeup_latest.
@@ -231,3 +231,78 @@ if (yes) {
 } else if (anything else typed) {
     Aborting due to response {response}
 }
+
+Welcome! Modulo is a productivity app built to bridge the gap between today's thoughts and tomorrow's actions!
+
+It's like a personal messaging system that let's you send thoughts to tomorrow and read thoughts from yesterday. 
+
+To get started Modulo will need some info to sync to your sleep schedule.  
+This will help coordinate when to advance to the next day 
+(and transfer messages from today's outbox to tomorrow's inbox) 
+
+What is the earliest you plan to wake up?
+
+wakeup earliest: 
+
+What is the latest you plan to wakeup? 
+(Modulo will automatically advance to the next day after this time)
+
+wakeup latest:
+
+The current time 8:45 AM is between your 
+selected wakeup range. Can we assume you're 
+up for a new day?
+
+(yes or no): 
+
+Awesome, you're all set up! Start sending messages
+to tomorrow's inbox with the `modulo tomorrow command`
+
+If you wake up before wakeup_latest, run the `modulo wakeup`
+command. Then run `modulo today` to see the messages!
+
+Alternatively, you can omit the `modulo wakeup` command if you
+wake up after {wakeup latest}.
+
+most recent wakeup: 
+
+Here's how it works. 
+
+Modulo maintains two "entry lists"
+    1. today
+    2. tomorrow
+
+The today list contains entries written yesterday to be read today
+the tomorrow list contains entries written today to be read tomorrow
+
+As an example, you might run the command 
+
+`modulo tomorrow` 
+
+to add some to-do items you want to do tomorrow
+
+Then tomorrow, you can run
+
+`modulo wakeup` 
+`modulo today`
+
+to review the to-do entries. 
+
+The `modulo wakeup` command tells modulo that you're ready to begin a new day. 
+This is required when you start a new day at a time between wakeup_earliest and wakeup_latest 
+(preferences which we will configure).
+
+However Modulo will automatically begin a new day after wakeup_latest.
+This means you can set wakeup_earliest = wakeup_latest to avoid
+typing modulo_wakeup if you prefer!
+
+Let's configure your wakeup range. 
+You can type 12-hour times like 9am, 9:30am or 24-hour times like 14:30
+
+Enter the earliest time you plan to wake up. 
+
+wakeup_earliest: 
+
+Now set the latest time you pland to wake up.
+
+wakeup_latest: 

@@ -6,6 +6,7 @@
 
 #define FORMAT_TIME_LENGTH 16
 
-char *format_time(time_t utc_time);
+int parse_time(char *time_str);
+char *format_time(int minutes);
 
 #endif

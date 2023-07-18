@@ -5,7 +5,7 @@
 #include "modulo.h"
 #include "command_router.h"
 #include "json.h"
-#include "modulo.h"
+#include "command.h"
 
 
 static void route_set(int argc, char **argv);
@@ -19,8 +19,10 @@ static void route_get_preference(int argc, char **argv);
 static void route_tomorrow(int argc, char **argv);
 static void route_today(int argc, char **argv);
 static void route_peek(int argc, char **argv);
-
+static void route_wakeup(int argc, char **argv);
 static void route_remove(int argc, char **argv);
+
+static void route_history(int argc, char **argv);
 
 static void check_argc(int argc, char **argv, int sub_cmds, int args);
 static void unknown_sub_command(char **argv, char *sub_cmd, int parent_cmds);
@@ -35,13 +37,15 @@ static void unknown_sub_command(char **argv, char *sub_cmd, int parent_cmds);
 
 */
 
-void route_command(int argc, char **argv) {
+void command_router(int argc, char **argv) {
     if (argc == 1) {
         command_root();
         return 0;
     }
     char *sub_cmd = argv[1];
-    if (strcmp(sub_cmd, COMMAND_SET) == 0) {
+    if (strcmp(sub_cmd, COMMAND_INIT) == 0) {
+        route_init(argc, argv);
+    } else if (strcmp(sub_cmd, COMMAND_SET) == 0) {
         route_set(argc, argv);
     } else if (strcmp(sub_cmd, COMMAND_GET) == 0) {
         route_get(argc, argv);
@@ -49,14 +53,25 @@ void route_command(int argc, char **argv) {
         route_tomorrow(argc, argv);
     } else if (strcmp(sub_cmd, COMMAND_TODAY) == 0) {
         route_today(argc, argv);
+    } else if (strcmp(sub_cmd, COMMAND_WAKEUP) == 0) {
+        route_wakeup(argc, argv);
     } else if (strcmp(sub_cmd, COMMAND_PEEK) == 0) {
         route_peek(argc, argv);
     } else if (strcmp(sub_cmd, COMMAND_REMOVE) == 0) {
         route_remove(argc, argv);
+    } else if (strcmp(sub_cmd, COMMAND_HISTORY) == 0) {
+        route_history(argc, argv);
     } else {
         int parent_cmds = 0;
         unknown_sub_command(argv, sub_cmd, parent_cmds);
     }
+}
+
+void route_init(int argc, char **argv) {
+    int sub_cmds = 1;
+    int args = 0;
+    check_argc(argc, argv, sub_cmds, args);
+    command_init();
 }
 
 void route_set(int argc, char **argv) {
@@ -87,9 +102,12 @@ void route_set_preference(int argc, char **argv) {
     if (strcmp(sub_cmd, COMMAND_USERNAME) == 0) {
         check_argc(argc, argv, sub_cmds, args);
         command_set_username(argv[3]);
-    } else if (strcmp(sub_cmd, COMMAND_WAKEUP) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_WAKEUP_EARLIEST) == 0) {
         check_argc(argc, argv, sub_cmds, args);
-        command_set_wakeup(argv[3]);
+        command_set_wakeup_earliest(argv[3]);
+    } else if (strcmp(sub_cmd, COMMAND_WAKEUP_LATEST) == 0) {
+        check_argc(argc, argv, sub_cmds, args);
+        command_set_wakeup_latest(argv[3]);
     } else if (strcmp(sub_cmd, COMMAND_ENTRY_DELIMITER) == 0) {
         check_argc(argc, argv, sub_cmds, args);
         command_set_entry_delimiter(argv[3]);
@@ -127,9 +145,12 @@ void route_get_preference(int argc, char **argv) {
     if (strcmp(sub_cmd, COMMAND_USERNAME) == 0) {
         check_argc(argc, argv, sub_cmds, args);
         command_get_username();
-    } else if (strcmp(sub_cmd, COMMAND_WAKEUP) == 0) {
+    } else if (strcmp(sub_cmd, COMMAND_WAKEUP_EARLIEST) == 0) {
         check_argc(argc, argv, sub_cmds, args);
-        command_get_wakeup();
+        command_get_wakeup_earliest();
+    } else if (strcmp(sub_cmd, COMMAND_WAKEUP_LATEST) == 0) {
+        check_argc(argc, argv, sub_cmds, args);
+        command_get_wakeup_latest();
     } else if (strcmp(sub_cmd, COMMAND_ENTRY_DELIMITER) == 0) {
         check_argc(argc, argv, sub_cmds, args);
         command_get_entry_delimiter();
@@ -153,6 +174,13 @@ void route_today(int argc, char **argv) {
     command_today();
 }
 
+void route_wakeup(int argc, char **argv) {
+    int sub_cmds = 1;
+    int args = 0;
+    check_argc(argc, argv, sub_cmds, args);
+    command_wakeup();
+}
+
 void route_peek(int argc, char **argv) {
     int sub_cmds = 1;
     int args = 0;
@@ -166,6 +194,20 @@ void route_remove(int argc, char **argv) {
     check_argc(argc, argv, sub_cmds, args);
     char *entry_number = argv[2];
     command_remove(entry_number);
+}
+
+void route_history(int argc, char **argv) {
+    int sub_cmds = 1;
+    if (argc >= 3) {
+        int args = 1;
+        check_argc(argc, argv, sub_cmds, args);
+        char *selection = argv[2];
+        command_history(selection);
+    } else {
+        int args = 0;
+        check_argc(argc, argv, sub_cmds, args);
+        command_history_status();
+    }
 }
 
 void unknown_sub_command(char **argv, char *sub_cmd, int parent_cmds) {

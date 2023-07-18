@@ -4,7 +4,9 @@
 
 #include "command_router.h"
 
+#include "time_utils.h"
+
 int main(int argc, char **argv) {
-    route_command(argc, argv);
+    command_router(argc, argv);
     return 0;
 }

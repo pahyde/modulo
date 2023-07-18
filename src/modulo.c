@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "modulo.h"
+#include "entry_list.h"
 #include "json.h"
 
 /*
@@ -23,7 +24,31 @@ e.g. indexing outside the address boundary of an array, strcpy with strlen(src) 
 
 */
 
-static void free_entry_list(EntryList *entry_list);
+/*
+    modulo_wakeup() {
+        // invariant: modulo is synced at this point
+        // i.e. day_frame_ptr points to no more than 24 hours ago
+        int day_progress = minutes_between(now, modulo->day_frame_ptr);
+        if (day_progress >= modulo->wakeup_earliest) {
+            modulo_step_days(1)
+        } else if (day_progress >= modulo->wakeup_earliest - 2*60*60) {
+            "You're up early! Are you sure you want to wakeup and start a new day?"
+            yes -> modulo_step_day_frames(1);
+        } else {
+            // Modulo started the current day at " "
+            // Run `modulo set wakeup_earliest` to set an earlier wakeup_time 
+            // if you want to start a new day now 
+        }
+    }
+
+    modulo_sync(time_t now) {
+        int days = days_between(now, modulo->day_ptr)
+        if (days >= 1) {
+            modulo_step_day_frames(days);
+        }
+    }
+*/
+
 static time_t default_wakeup();
 
 Modulo *create_default_modulo(char *username) {
@@ -31,35 +56,33 @@ Modulo *create_default_modulo(char *username) {
 
     // set preferences
     modulo_set_username(modulo, username);
-    modulo_set_wakeup(modulo, default_wakeup());
+    modulo_set_wakeup_earliest(modulo, DEFAULT_WAKEUP_EARLIEST);
+    modulo_set_wakeup_latest(modulo, DEFAULT_WAKEUP_LATEST);
     modulo_set_entry_delimiter(modulo, "%");
+
+    // initialize day pointer
+    time_t day_ptr_0 = get_most_recent(DEFAULT_WAKEUP_LATEST);
+    modulo_set_day_ptr(modulo, day_ptr_0);
 
     // initialize today entry lists
     EntryList today = create_entry_list();
-    modulo_set_today_entries(modulo, today);
+    modulo_set_today(modulo, today);
 
     // initialize tomorrow entry lists
     EntryList tomorrow = create_entry_list();
-    modulo_set_tomorrow_entries(modulo, tomorrow);
+    modulo_set_tomorrow(modulo, tomorrow);
 
-    // time_stamp last update
-    modulo_set_last_update(modulo, time(NULL));
+    // initialize history
+    HistoryQueue history = create_history_queue();
+    modulo_set_history(modulo, history);
     return modulo;
 }
 
 void free_modulo(Modulo *modulo) {
-    // free(modulo->username);
     free_entry_list(&modulo->today);
     free_entry_list(&modulo->tomorrow);
+    free_history_queue(&modulo->history);
     free(modulo);
-}
-
-void free_entry_list(EntryList *entry_list) {
-    char **entries = entry_list->entries;
-    for (int i = 0; i < entry_list->count; i++) {
-        free(entries[i]);
-    }
-    free(entries);
 }
 
 void modulo_set_username(Modulo *modulo, char *username) {
@@ -71,9 +94,8 @@ void modulo_set_username(Modulo *modulo, char *username) {
     strcpy(modulo->username, username);
 }
 
-void modulo_set_wakeup(Modulo *modulo, time_t wakeup) {
-    modulo->wakeup = wakeup;
-}
+void modulo_set_wakeup_earliest(Modulo *modulo, time_t wakeup) { modulo->wakeup_earliest = wakeup; }
+void modulo_set_wakeup_latest(Modulo *modulo, time_t wakeup) { modulo->wakeup_latest = wakeup; }
 
 void modulo_set_entry_delimiter(Modulo *modulo, char *entry_delimiter) {
     check_length(
@@ -84,57 +106,43 @@ void modulo_set_entry_delimiter(Modulo *modulo, char *entry_delimiter) {
     strcpy(modulo->entry_delimiter, entry_delimiter);
 }
 
-void modulo_set_today_entries(Modulo *modulo, EntryList entry_list) {
+void modulo_set_day_ptr(Modulo *modulo, time_t day_ptr) {
+    modulo->day_ptr = day_ptr;
+}
+
+void modulo_set_today(Modulo *modulo, EntryList entry_list) {
     modulo->today = entry_list;
 }
-void modulo_set_tomorrow_entries(Modulo *modulo, EntryList entry_list) {
+void modulo_set_tomorrow(Modulo *modulo, EntryList entry_list) {
     modulo->tomorrow = entry_list;
 }
 
-void modulo_set_last_update(Modulo *modulo, time_t last_update) {
-    modulo->last_update = last_update;
+void modulo_set_history(Modulo *modulo, HistoryQueue history) {
+    modulo->history = history;
 }
 
 // getters
 char *modulo_get_username(Modulo *modulo) { return modulo->username; }
-time_t modulo_get_wakeup(Modulo *modulo) { return modulo->wakeup; }
+time_t modulo_get_wakeup_earliest(Modulo *modulo) { return modulo->wakeup_earliest; }
+time_t modulo_get_wakeup_latest(Modulo *modulo) { return modulo->wakeup_latest; }
 char *modulo_get_entry_delimiter(Modulo *modulo) { return modulo->entry_delimiter; }
 
-EntryList *modulo_get_today_entries(Modulo *modulo) { return &modulo->today; }
-EntryList *modulo_get_tomorrow_entries(Modulo *modulo) { return &modulo->tomorrow; }
+time_t modulo_get_day_ptr(Modulo *modulo) { return modulo->day_ptr; }
 
-time_t modulo_get_last_update(Modulo *modulo, time_t last_update) { return modulo->last_update; }
-
-EntryList create_entry_list() {
-    EntryList entry_list = {
-        .capacity = 8,
-        .count = 0,
-        .entries = malloc(ENTRY_LIST_CAPACITY * sizeof(char *))
-    };
-    return entry_list;
-}
+EntryList *modulo_get_today(Modulo *modulo) { return &modulo->today; }
+EntryList *modulo_get_tomorrow(Modulo *modulo) { return &modulo->tomorrow; }
+HistoryQueue *modulo_get_history(Modulo *modulo) { return &modulo->history; }
 
 // Tomorrow EntryList mutation
+// TODO: fix
 void modulo_push_tomorrow(Modulo *modulo, char *entry) {
-    EntryList *tomorrow = modulo_get_tomorrow_entries(modulo);
-    if (tomorrow->count + 1 > tomorrow->capacity) {
-        tomorrow->entries = realloc(tomorrow->entries, tomorrow->capacity * 2);
-    }
-    tomorrow->entries[tomorrow->count++] = entry;
+    EntryList *tomorrow = modulo_get_tomorrow(modulo);
+    entry_list_push(tomorrow, entry);
 }
 
 void modulo_remove_tomorrow(Modulo *modulo, int remove_index) {
-    EntryList *tomorrow = modulo_get_tomorrow_entries(modulo);
-    int count = tomorrow->count;
-    if (remove_index >= count) {
-        fprintf(stderr, "Error: index %d out of bounds for entry list of length %d\n", remove_index, count);
-        exit(1);
-    }
-    char *removed = tomorrow->entries[remove_index];
-    for (int i = remove_index+1; i < count; i++) {
-        tomorrow->entries[i-1] = tomorrow->entries[i];
-    }
-    free(removed);
+    EntryList *tomorrow = modulo_get_tomorrow(modulo);
+    entry_list_remove(tomorrow, remove_index);
 }
 
 // sync
@@ -142,10 +150,19 @@ bool modulo_out_of_sync(Modulo *modulo) {
     return false;
 }
 
-void modulo_sync(Modulo *modulo) {
+/*
+returns true if sync occurs (day_ptr incremented)
+        false otherwise
+*/
+bool modulo_check_sync(Modulo *modulo) {
     time_t now = time(NULL);
-    modulo_sync_with_timestamp(modulo, now);
+    modulo_sync_forward(modulo, 1);
 }
+
+void modulo_sync_forward(Modulo *modulo, int days) {
+
+}
+
 void modulo_sync_with_timestamp(Modulo *modulo, time_t now) {
     
 }
