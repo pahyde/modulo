@@ -7,6 +7,7 @@
 #include "filesystem.h"
 #include "time_utils.h"
 #include "modulo.h"
+#include "prompt.h"
 
 static void command_set_wakeup_boundary(char *boundary, char *wakeup);
 
@@ -41,23 +42,19 @@ void command_init() {
     char *username = get_system_username(c);
     Modulo *modulo = create_default_modulo(username);
     check_init(modulo);
-    print_init_msg(username);
+
+    // print init message
+    prompt_init_msg(username);
+
+    // prompt earliest wakeup
     printf("What is the earliest you plan to wake up?\n");
     printf("(You can type 12-hour times like 9am, 9:30am or 24-hour times like 14:30)\n");
-    char wakeup_earliest[32];
-    do {
-        printf("\n");
-        printf("earliest wakeup: ");
-        fgets(wakeup_earliest, sizeof wakeup_earliest, stdin);
-        printf("\n");
-    } while (set_wakeup_earliest(wakeup_earliest, modulo, false) == -1);
-    char wakeup_latest[32];
-    do {
-        printf("\n");
-        printf("latest wakeup: ");
-        fgets(wakeup_latest, sizeof wakeup_latest, stdin);
-        printf("\n");
-    } while (set_wakeup_latest(wakeup_latest, modulo, false) == -1);
+    prompt_set_wakeup_earliest(modulo, false);
+
+    // prompt latest wakeup
+    printf("What is the latest you plan to wakeup?\n");
+    printf("Modulo will automatically advance to the next day after this time\n");
+    prompt_set_wakeup_latest(modulo, false);
 }
 
 void command_set_preferences() {
@@ -291,6 +288,19 @@ int set_wakeup_latest(char *wakeup, Modulo *modulo, bool show_prev) {
     return 0;
 }
 
+int set_wakeup_recent(char *wakeup, Modulo *modulo) {
+    int wakeup_time;
+    if ((wakeup_time = parse_time(wakeup)) == -1) {
+        print_wakeup_err_msg(wakeup);
+        return -1;
+    }
+    printf("Successfully set latest wakeup to %s!\n", format_time(wakeup_time));
+    if (show_prev) {
+        printf("Previous wakeup_latest: %s\n", prev_wakeup);
+    }
+    return 0;
+}
+
 int set_entry_delimiter(char *entry_delimiter, Modulo *modulo, OSContext *c, bool show_prev) {
     if (!length_ok(entry_delimiter, DELIMITER_MAX_LEN)) {
         fprintf(
@@ -378,26 +388,4 @@ void save_modulo_or_exit(Modulo *modulo, OSContext *c) {
         char *filepath = c->modulo_json_filepath;
         fprintf(stderr, "Failure to save modulo data to %s\n", filepath);
     }
-}
-
-void print_wakeup_err_msg(char *wakeup) {
-    fprintf(stderr, "Error parsing wakeup time: %s\n", wakeup);
-    fprintf(stderr,"Your input must match one of the following formats:\n");
-    fprintf(stderr,"AM/PM:   1. %%H(am|pm) 2. %%H:%%M(am|pm)\n");
-    fprintf(stderr,"24-Hour: 3. %%H        4. %%H:%%M\n");
-    fprintf(stderr,"\n");
-    fprintf(stderr,"Note that white space and leading zeros are optional. Also matching is case insensitive.\n");
-    fprintf(stderr,"i.e. '9am', '009:00 AM', '9:00am', and '9 : 00' are all valid.\n");
-}
-
-void print_init_msg(char *username) {
-    printf("Welcome! Modulo is a productivity app built to bridge the ");
-    printf("gap between today's thoughts and tomorrow's actions!\n");
-    printf("\n");
-    printf("It's like a personal messaging system that let's you\n");
-    printf("    1. send thoughts to tomorrow\n");
-    printf("    2. read thoughts from yesterday.\n");
-    printf("\n");
-    printf("To get started, Modulo will need some information ");
-    printf("to sync to your schedule.\n");
 }
