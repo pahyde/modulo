@@ -306,3 +306,15 @@ wakeup_earliest:
 Now set the latest time you pland to wake up.
 
 wakeup_latest: 
+
+
+modulo wakeup - [wakeup_earliest <= now < wakeup_latest]
+
+Good morning pahyde! 
+
+It's currently 8:45 AM July 20, 2023.
+Your next wakeup is scheduled between 7:00 AM - 10:00 AM tomorrow.
+
+You have 3 new entries to review in today's inbox
+
+Run `modulo today` to view them or run `modulo tomorrow` to start journaling your thoughts for tomorrow. 
