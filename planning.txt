@@ -308,13 +308,35 @@ Now set the latest time you pland to wake up.
 wakeup_latest: 
 
 
-modulo wakeup - [wakeup_earliest <= now < wakeup_latest]
 
-Good morning pahyde! 
 
-It's currently 8:45 AM July 20, 2023.
+wakeup {
+Good morning pahyde!
+}
+
+It's currently 8:45 AM (8:00) July 20, 2023.
 Your next wakeup is scheduled between 7:00 AM - 10:00 AM tomorrow.
 
-You have 3 new entries to review in today's inbox
+status (cli_print_entry_lists()) {
+Your lists:
+today    (inbox):  3 entries to review today
+tomorrow (outbox): 0 entries written for tomorrow
+history: 
+    1. -
+    2. -
+    3. -
+}
 
+if (entries.size > 0) {
+You have 3 new entries to review today!
 Run `modulo today` to view them or run `modulo tomorrow` to start journaling your thoughts for tomorrow. 
+} else {
+No entries to review today (You have to start somewhere!).
+Run `modulo tomorrow` to start journaling your thoughts for tomorrow's inbox.
+}
+
+
+Your earliest wakeup time is approaching!
+
+It's currently 10:45 PM July 20, 2023.
+Your next wakeup is scheduled between 7:00 AM - 10:00 AM tomorrow.

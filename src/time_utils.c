@@ -4,6 +4,7 @@
 #include <ctype.h>
 
 #include "time_utils.h"
+#include "modulo.h"
 
 static int parse_12_time(int hour, int minute, char *am_pm);
 static int parse_24_time(int hour, int minute);
@@ -82,6 +83,23 @@ time_t parse_time(char *)
     Note that white space and leading zeros are optional. Also matching is case insensitive.
     i.e. "9am", "009:00 AM", "9:00am", and "9 : 00" are all valid.
 */
+
+/*
+We define offset to be the time in seconds elapsed since the current day pointer
+
+datetime_offset:    calculated dynamically using the current day pointer
+time_of_day_offset: calculated statically using wakeup_latest in minutes
+*/
+int datetime_offset(time_t ref_point, Modulo *modulo) {
+    return (int) difftime(ref_point, modulo->day_ptr);
+}
+
+int time_of_day_offset(int time_minutes, Modulo *modulo) {
+    // minutes in a day
+    int modulus = 24 * 60;
+    // time of day offset from the day ptr must be positive by definition
+    return ((time_minutes - modulo->wakeup_latest) + modulus) % modulus;
+}
 
 void printf_time(char *format, int time_minutes) {
     char *format_str = format_time(time_minutes);
