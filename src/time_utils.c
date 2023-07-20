@@ -197,3 +197,15 @@ char *format_time(int time_minutes) {
     sprintf(formatted, "%02d:%02d %s (%02d:%02d)", hours_12, minutes, am_pm, hours_24, minutes);
     return formatted;
 }
+
+char *format_date_range(Modulo *modulo) {
+    // static wakeup range string
+    char buffer[64];
+    int now = time_of_day(time(NULL));
+    int wakeup_earliest = modulo->wakeup_earliest;
+    int wakeup_latest = modulo->wakeup_latest;
+
+    time_t day_ptr = modulo->day_ptr;
+    time_t next_wakeup_earliest = get_next_occurrence(wakeup_earliest, day_ptr);
+    time_t next_wakeup_latest = get_next_occurrence(wakeup_latest, day_ptr);
+}

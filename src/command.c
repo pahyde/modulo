@@ -228,12 +228,48 @@ void command_today() {
     free(c);
 }
 
+/* 
+micro lesson: we can prove that
+n / m / m = n / (m*m) for ints n,m
+*/
 void command_wakeup() {
     OSContext *c = get_context();
     Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
+
+    // times quoted in seconds from day_ptr
+    int now = datetime_offset(time(NULL), modulo);
+    int wakeup_earliest = time_of_day_offset(modulo->wakeup_earliest, modulo);
+
+    // hours until wakeup earliest
+    int hours_until_next_wakeup = (wakeup_earliest - now) / 60 / 60;
+    if (hours_until_next_wakeup <= 0) {
+        wakeup_success(modulo);
+    } else if (hours_until_next_wakeup <= 2) {
+        printf_time("The current time %s is pretty early for your usual wakeup range:\n", time_of_day(time(NULL)));
+        printf_time("%s - ", modulo->wakeup_earliest);
+        printf_time("%s\n\n", modulo->wakeup_latest);
+        printf("Are you sure you want to wakeup?\n\n");
+        bool is_yes = cli_prompt_yes_or_no();
+        if (is_yes) {
+            wakeup_success(modulo);
+        } else {
+            wakeup_failure(modulo);
+        }
+    } else {
+        wakeup_failure(modulo);
+    }
     free(modulo);
     free(c);
+}
+
+void wakeup_success(Modulo *modulo) {
+    modulo_sync_forward(modulo, 1);
+    cli_print_wakeup_success(modulo);
+}
+
+void wakeup_failure(Modulo *modulo) {
+    cli_print_wakeup_failure(modulo);
 }
 
 void command_peek() {

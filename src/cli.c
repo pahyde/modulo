@@ -14,12 +14,13 @@ micro-lesson: EOF is only meaningful to functions like fgetc, getchar, fgets at 
 
 static FsmState next_state(FsmState curr, char c);
 
-static int cli_get_input_token(char *input_buffer, size_t max_input_length);
+static int  cli_get_input_token(char *input_buffer, size_t max_input_length);
 static void cli_gets(char *buffer, size_t buf_size);
 static void clear_stdin();
 
-static void print_wakeup_err_msg(char *wakeup);
-static bool cli_prompt_yes_or_no(Modulo *modulo);
+static void cli_print_wakeup_error_message(char *wakeup);
+static void cli_print_time_status(Modulo *modulo);
+static void cli_print_entry_lists_status(Modulo *modulo);
 
 static void string_tolower(char *str);
 static bool length_ok(char *string, int max_length);
@@ -54,6 +55,26 @@ void cli_print_preferences(Modulo *modulo) {
     printf("    4. entry_delimiter: %s\n", modulo->entry_delimiter);
 }
 
+void cli_print_wakeup_success(Modulo *modulo) {
+    printf("Good morning %s!\n\n", modulo->username);
+    cli_print_time_status(modulo);
+    cli_print_entry_lists_status(modulo);
+    int new_entries = modulo->today.size;
+    if (new_entries > 0) {
+        printf("You have %d new entries to review today!\n", new_entries);
+        printf("Run `modulo today` to view them or run `modulo tomorrow` to start journaling your thoughts for tomorrow.\n");
+    } else {
+        printf("No entries to review today (You have to start somewhere!)\n");
+        printf("Run `modulo tomorrow` to start journaling your thoughts for tomorrow.\n");
+    }
+}
+
+void cli_print_wakeup_failure(Modulo *modulo) {
+    printf("Your next wakeup range is scheduled for %s\n", format_wakeup_range(modulo));
+    printf_time("The current time %s is too early\n", time_of_day(time(NULL)));
+    printf("\nRun `modulo set wakeup_earliest` or `modulo set preferences` to configure your wakeup range\n");
+}
+
 void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t recent_wakeup_latest) {
     time_t now = time(NULL);
     int time_minutes = time_of_day(now);
@@ -61,7 +82,7 @@ void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t re
         "The current time %s is between your wakeup range.\nCan we assume you're up for a new day?\n", 
         time_minutes
     );
-    bool is_yes = cli_prompt_yes_or_no(modulo);
+    bool is_yes = cli_prompt_yes_or_no();
     time_t day_ptr_0;
     if (is_yes) {
         time_t next_wakeup_latest = get_next_occurrence(modulo->wakeup_latest, recent_wakeup_earliest);
@@ -181,7 +202,7 @@ int cli_set_username(Modulo *modulo, char *username, bool show_prev) {
 int cli_set_wakeup_earliest(Modulo *modulo, char *wakeup, bool show_prev) {
     int wakeup_time;
     if ((wakeup_time = parse_time(wakeup)) == -1) {
-        print_wakeup_err_msg(wakeup);
+        cli_print_wakeup_error_message(wakeup);
         return -1;
     }
     time_t prev_wakeup = modulo_get_wakeup_earliest(modulo);
@@ -196,7 +217,7 @@ int cli_set_wakeup_earliest(Modulo *modulo, char *wakeup, bool show_prev) {
 int cli_set_wakeup_latest(Modulo *modulo, char *wakeup, bool show_prev) {
     int wakeup_time;
     if ((wakeup_time = parse_time(wakeup)) == -1) {
-        print_wakeup_err_msg(wakeup);
+        cli_print_wakeup_error_message(wakeup);
         return -1;
     }
     time_t prev_wakeup = modulo_get_wakeup_latest(modulo);
@@ -318,22 +339,12 @@ bool length_ok(char *string, int max_length) {
 }
 
 
-void print_wakeup_err_msg(char *wakeup) {
-    fprintf(stderr, "Error parsing wakeup time: %s\n", wakeup);
-    fprintf(stderr,"Your input must match one of the following formats:\n");
-    fprintf(stderr,"AM/PM:   1. %%H(am|pm) 2. %%H:%%M(am|pm)\n");
-    fprintf(stderr,"24-Hour: 3. %%H        4. %%H:%%M\n");
-    fprintf(stderr,"\n");
-    fprintf(stderr,"Note that white space and leading zeros are optional. Also matching is case insensitive.\n");
-    fprintf(stderr,"i.e. '9am', '009:00 AM', '9:00am', and '9 : 00' are all valid.\n");
-}
-
-bool cli_prompt_yes_or_no(Modulo *modulo) {
+bool cli_prompt_yes_or_no() {
     char response[4];
     while (true) {
         printf("\n");
         printf("(yes or no): ");
-        fgets(response, sizeof response, stdin);
+        cli_gets(response, sizeof response);
         string_tolower(response);
         if (strcmp(response, "yes") == 0) {
             return true;
@@ -367,4 +378,22 @@ void cli_gets(char *buffer, size_t buf_size) {
 void clear_stdin() {
     char c;
     while ((c = getchar()) != '\n' && c != EOF);
+}
+
+void cli_print_wakeup_error_message(char *wakeup) {
+    fprintf(stderr, "Error parsing wakeup time: %s\n", wakeup);
+    fprintf(stderr,"Your input must match one of the following formats:\n");
+    fprintf(stderr,"AM/PM:   1. %%H(am|pm) 2. %%H:%%M(am|pm)\n");
+    fprintf(stderr,"24-Hour: 3. %%H        4. %%H:%%M\n");
+    fprintf(stderr,"\n");
+    fprintf(stderr,"Note that white space and leading zeros are optional. Also matching is case insensitive.\n");
+    fprintf(stderr,"i.e. '9am', '009:00 AM', '9:00am', and '9 : 00' are all valid.\n");
+}
+
+void cli_print_time_status(Modulo *modulo) {
+
+}
+
+void cli_print_entry_lists_status(Modulo *modulo) {
+
 }

@@ -23,8 +23,12 @@ typedef enum FsmState {
 void cli_print_init_hello(char *username);
 void cli_print_init_goodbye(Modulo *modulo);
 void cli_print_preferences(Modulo *modulo);
+void cli_print_wakeup_success(Modulo *modulo);
+void cli_print_wakeup_failure(Modulo *modulo);
 
 Selection cli_prompt_preference_selection();
+
+bool cli_prompt_yes_or_no();
 
 void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t recent_wakeup_latest);
 void cli_prompt_username(Modulo *modulo, bool show_prev);
