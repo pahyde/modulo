@@ -102,8 +102,8 @@ type `done` at any time to abort
 The following preferences are set:
     1. username: early_riser
     2. wakeup_earliest: 05:00 AM
-    2. wakeup_latest: 12:00 PM
-    3. entry_delimiter: %
+    3. wakeup_latest: 12:00 PM
+    4. entry_delimiter: %
 
 Enter a number to set a preference: 1
 

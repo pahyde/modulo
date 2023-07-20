@@ -7,19 +7,9 @@
 #include "filesystem.h"
 #include "time_utils.h"
 #include "modulo.h"
-#include "prompt.h"
+#include "cli.h"
 
 static void command_set_wakeup_boundary(char *boundary, char *wakeup);
-
-static int set_username(char *username, Modulo *modulo, OSContext *c, bool show_prev);
-static int set_wakeup_earliest(char *wakeup, Modulo *modulo, bool show_prev);
-static int set_wakeup_latest(char *wakeup, Modulo *modulo, bool show_prev);
-static int set_entry_delimiter(char *username, Modulo *modulo, OSContext *c, bool show_prev);
-
-static void print_init_msg();
-static void print_wakeup_err_msg(char *wakeup);
-
-static bool length_ok(char *string, int max_length);
 
 /*
     reads from disk (or initializes) a modulo struct. 
@@ -44,17 +34,31 @@ void command_init() {
     check_init(modulo);
 
     // print init message
-    prompt_init_msg(username);
+    cli_print_init_hello(username);
 
     // prompt earliest wakeup
     printf("What is the earliest you plan to wake up?\n");
     printf("(You can type 12-hour times like 9am, 9:30am or 24-hour times like 14:30)\n");
-    prompt_set_wakeup_earliest(modulo, false);
+    cli_prompt_wakeup_earliest(modulo, false);
 
     // prompt latest wakeup
     printf("What is the latest you plan to wakeup?\n");
     printf("Modulo will automatically advance to the next day after this time\n");
-    prompt_set_wakeup_latest(modulo, false);
+    cli_prompt_wakeup_latest(modulo, false);
+
+    time_t recent_wakeup_earliest = get_most_recent(modulo->wakeup_earliest, time(NULL));
+    time_t recent_wakeup_latest = get_most_recent(modulo->wakeup_latest, time(NULL));
+    if (recent_wakeup_latest < recent_wakeup_earliest) {
+        // wakeup_latest < wakeup_earliest < now < wakeup_latest
+        cli_prompt_day_ptr(modulo, recent_wakeup_earliest, recent_wakeup_latest);
+    } else {
+        modulo_set_day_ptr(modulo, recent_wakeup_latest);
+    }
+    cli_print_init_goodbye(modulo);
+    // clean up
+    save_modulo_or_exit(modulo, c);
+    free(modulo);
+    free(c);
 }
 
 void command_set_preferences() {
@@ -62,6 +66,33 @@ void command_set_preferences() {
     Modulo *modulo = load_synced_modulo(c, false);
     check_init(modulo);
 
+    printf("This utility helps you update your user preferences.\nType `done` at any time to abort\n\n");
+
+    bool done = false;
+    while (!done) {
+        cli_print_preferences(modulo);
+        Selection selection = cli_prompt_preference_selection();
+        switch (selection) {
+            case PREFERENCE_USERNAME:
+                cli_prompt_username(modulo, true);
+                break;
+            case PREFERENCE_WAKEUP_EARLIEST:
+                cli_prompt_wakeup_earliest(modulo, true);
+                break;
+            case PREFERENCE_WAKEUP_LATEST:
+                cli_prompt_wakeup_latest(modulo, true);
+                break;
+            case PREFERENCE_ENTRY_DELIMITER:
+                cli_prompt_entry_delimiter(modulo, true);
+                break;
+            case DONE:
+                done = true;
+                break;
+            default:
+                fprintf(stderr, "Error: Unrecognized preference selection %d\n", selection);
+                exit(EXIT_FAILURE);
+        }
+    }
     save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
@@ -71,7 +102,7 @@ void command_set_username(char *username) {
     OSContext *c = get_context();
     Modulo *modulo = load_synced_modulo(c, false);
     check_init(modulo);
-    if (set_username(username, modulo, c, true) == -1) {
+    if (cli_set_username(modulo, username, true) == -1) {
         exit(1);
     }
     save_modulo_or_exit(modulo, c);
@@ -93,9 +124,9 @@ void command_set_wakeup_boundary(char *boundary, char *wakeup) {
     check_init(modulo);
 
     if (strcmp(boundary, WAKEUP_BOUNDARY_EARLIEST) == 0) {
-        set_wakeup_earliest(wakeup, modulo, true);
+        cli_set_wakeup_earliest(wakeup, modulo, true);
     } else {
-        set_wakeup_latest(wakeup, modulo, true);
+        cli_set_wakeup_latest(wakeup, modulo, true);
     }
 
     save_modulo_or_exit(modulo, c);
@@ -108,7 +139,7 @@ void command_set_entry_delimiter(char *entry_delimiter) {
     Modulo *modulo = load_synced_modulo(c, false);
     check_init(modulo);
 
-    if (set_entry_delimiter(entry_delimiter, modulo, c, true) == -1) {
+    if (cli_set_entry_delimiter(entry_delimiter, modulo, true) == -1) {
         exit(1);
     }
     save_modulo_or_exit(modulo, c);
@@ -120,6 +151,8 @@ void command_get_preferences() {
     OSContext *c = get_context();
     Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
+
+    cli_print_preferences(modulo);
 
     save_modulo_or_exit(modulo, c);
     free(modulo);
@@ -234,96 +267,6 @@ void command_remove(char *entry_number) {
     save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
-}
-
-int set_username(char *username, Modulo *modulo, OSContext *c, bool show_prev) {
-    if (!length_ok(username, USER_NAME_MAX_LEN)) {
-        fprintf(
-            stderr, 
-            "Oops, the username \"%.15s...\" is too long! Usernames must be %d characters or less.\n",
-            username,
-            USER_NAME_MAX_LEN
-        );
-        return -1;
-    }
-    char prev_username[USER_NAME_MAX_LEN + 1];
-    strcpy(prev_username, modulo_get_username(modulo));
-    modulo_set_username(modulo, username);
-
-    printf("Successfully set username!\n");
-    if (show_prev) {
-        printf("Previous username: %s, ", prev_username);
-    }
-    printf("New username: %s\n", username);
-    return 0;
-}
-
-int set_wakeup_earliest(char *wakeup, Modulo *modulo, bool show_prev) {
-    int wakeup_time;
-    if ((wakeup_time = parse_time(wakeup)) == -1) {
-        print_wakeup_err_msg(wakeup);
-        return -1;
-    }
-    time_t prev_wakeup = modulo_get_wakeup_earliest(modulo);
-    modulo_set_wakeup_earliest(modulo, wakeup_time);
-    printf("Successfully set earliest wakeup to %s!\n", format_time(wakeup_time));
-    if (show_prev) {
-        printf("Previous wakeup_earliest: %s\n", prev_wakeup);
-    }
-    return 0;
-}
-
-int set_wakeup_latest(char *wakeup, Modulo *modulo, bool show_prev) {
-    int wakeup_time;
-    if ((wakeup_time = parse_time(wakeup)) == -1) {
-        print_wakeup_err_msg(wakeup);
-        return -1;
-    }
-    time_t prev_wakeup = modulo_get_wakeup_latest(modulo);
-    modulo_set_wakeup_latest(modulo, wakeup_time);
-    printf("Successfully set latest wakeup to %s!\n", format_time(wakeup_time));
-    if (show_prev) {
-        printf("Previous wakeup_latest: %s\n", prev_wakeup);
-    }
-    return 0;
-}
-
-int set_wakeup_recent(char *wakeup, Modulo *modulo) {
-    int wakeup_time;
-    if ((wakeup_time = parse_time(wakeup)) == -1) {
-        print_wakeup_err_msg(wakeup);
-        return -1;
-    }
-    printf("Successfully set latest wakeup to %s!\n", format_time(wakeup_time));
-    if (show_prev) {
-        printf("Previous wakeup_latest: %s\n", prev_wakeup);
-    }
-    return 0;
-}
-
-int set_entry_delimiter(char *entry_delimiter, Modulo *modulo, OSContext *c, bool show_prev) {
-    if (!length_ok(entry_delimiter, DELIMITER_MAX_LEN)) {
-        fprintf(
-            stderr, 
-            "Oops, the delimiter \"%.7s...\" is too long! Entry delimiter must be %d characters or less.\n",
-            entry_delimiter,
-            DELIMITER_MAX_LEN
-        );
-        return -1;
-    }
-    char prev_entry_delimiter[DELIMITER_MAX_LEN+1];
-    strcpy(prev_entry_delimiter, modulo_get_entry_delimiter(modulo));
-    modulo_set_entry_delimiter(modulo, entry_delimiter);
-
-    printf("Successfully set entry_delimiter!\n");
-    if (show_prev) {
-        printf("Previous entry_delimiter: %s, ", prev_entry_delimiter);
-    }
-    printf("Previous entry_delimiter: %s, New entry_delimiter: %s\n", prev_entry_delimiter, entry_delimiter);
-}
-
-bool length_ok(char *string, int max_length) {
-    return strnlen(string, max_length+1) <= max_length;
 }
 
 /*

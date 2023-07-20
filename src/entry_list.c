@@ -8,7 +8,7 @@ EntryList create_entry_list() {
     EntryList entry_list = {
         .send_date = 0,
         .recv_date = 0,
-        .read_receipt = true,
+        .read_receipt = false,
         .capacity = ENTRY_LIST_INIT_CAPACITY,
         .size = 0,
         .entries = malloc(ENTRY_LIST_INIT_CAPACITY * sizeof(char *))
@@ -35,9 +35,9 @@ void entry_list_set_read_receipt(EntryList *entry_list, bool read_receipt) {
 }
 
 // getters
-void entry_list_get_send_date(EntryList *entry_list) { return entry_list->send_date; }
-void entry_list_get_recv_date(EntryList *entry_list) { return entry_list->recv_date; }
-void entry_list_get_read_receipt(EntryList *entry_list) {return entry_list->read_receipt; }
+time_t entry_list_get_send_date(EntryList *entry_list) { return entry_list->send_date; }
+time_t entry_list_get_recv_date(EntryList *entry_list) { return entry_list->recv_date; }
+bool entry_list_get_read_receipt(EntryList *entry_list) { return entry_list->read_receipt; }
 
 // push to entry list and update send_date
 void entry_list_push(EntryList *entry_list, char *entry) {

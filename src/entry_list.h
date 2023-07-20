@@ -45,9 +45,9 @@ void entry_list_set_recv_date(EntryList *entry_list, time_t send_date);
 void entry_list_set_read_receipt(EntryList *entry_list, bool read_receipt);
 
 // getters
-void entry_list_get_send_date(EntryList *entry_list);
-void entry_list_get_recv_date(EntryList *entry_list);
-void entry_list_get_read_receipt(EntryList *entry_list);
+time_t entry_list_get_send_date(EntryList *entry_list);
+time_t entry_list_get_recv_date(EntryList *entry_list);
+bool entry_list_get_read_receipt(EntryList *entry_list);
 
 // push to entry list
 void entry_list_push(EntryList *entry_list, char *entry);

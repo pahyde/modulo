@@ -8,7 +8,7 @@
 #define COMMAND_PREFERENCES "preferences"
 #define COMMAND_USERNAME "username"
 #define COMMAND_WAKEUP_EARLIEST "wakeup_earliest"
-#define COMMAND_WAKEUP_LATEST "wakeup_earliest"
+#define COMMAND_WAKEUP_LATEST "wakeup_latest"
 #define COMMAND_ENTRY_DELIMITER "entry_delimiter"
 
 #define COMMAND_TOMORROW "tomorrow"

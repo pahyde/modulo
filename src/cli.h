@@ -5,11 +5,28 @@
 
 #include "modulo.h"
 #include "entry_list.h"
+#include "command.h"
 
-void cli_print_init_message(char *username);
+typedef enum FsmState {
+    START,
+    RAW,
+    RAW_ESCAPE,
+    QUOTED,
+    QUOTED_ESCAPE,
+    SPACE,
+    INVALID
+} FsmState;
 
-void cli_prompt_day_ptr(int wakeup_earliest, int wakeup_latest);
+#define CLI_DONE "done"
+#define MAX_INPUT_LENGTH 63
 
+void cli_print_init_hello(char *username);
+void cli_print_init_goodbye(Modulo *modulo);
+void cli_print_preferences(Modulo *modulo);
+
+Selection cli_prompt_preference_selection();
+
+void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t recent_wakeup_latest);
 void cli_prompt_username(Modulo *modulo, bool show_prev);
 void cli_prompt_wakeup_earliest(Modulo *modulo, bool show_prev);
 void cli_prompt_wakeup_latest(Modulo *modulo, bool show_prev);

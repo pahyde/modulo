@@ -1,8 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "time_utils.h"
+
+static int parse_12_time(int hour, int minute, char *am_pm);
+static int parse_24_time(int hour, int minute);
 
 /*
 API
@@ -79,10 +83,48 @@ time_t parse_time(char *)
     i.e. "9am", "009:00 AM", "9:00am", and "9 : 00" are all valid.
 */
 
-time_t get_most_recent(int time_minutes) {
-    time_t now = time(NULL);
-    struct tm *local_time = localtime(&now);
-    
+void printf_time(char *format, int time_minutes) {
+    char *format_str = format_time(time_minutes);
+    printf(format, format_str);
+    free(format_str);
+}
+
+int time_of_day(time_t ref_point) {
+    struct tm *local_time = localtime(&ref_point);
+    return local_time->tm_hour * 60 + local_time->tm_min;
+}
+
+time_t get_next_occurrence(int time_minutes, time_t ref_point) {
+    struct tm *local_time = localtime(&ref_point);
+    int hour = time_minutes / 60;
+    int minute = time_minutes % 60;
+    if (local_time->tm_hour > hour) {
+        // next occurrence happens tomorrow
+        local_time->tm_mday++;
+    } else if (local_time->tm_hour == hour && local_time->tm_min > minute) {
+        // next occurrence happens tomorrow
+        local_time->tm_mday++;
+    }
+    local_time->tm_hour = hour;
+    local_time->tm_min = minute;
+    return mktime(local_time);
+
+}
+
+time_t get_most_recent(int time_minutes, time_t ref_point) {
+    struct tm *local_time = localtime(&ref_point);
+    int hour = time_minutes / 60;
+    int minute = time_minutes % 60;
+    if (local_time->tm_hour < hour) {
+        // most recent occurred yesterday
+        local_time->tm_mday--;
+    } else if (local_time->tm_hour == hour && local_time->tm_min < minute) {
+        // most recent occurred yesterday
+        local_time->tm_mday--;
+    }
+    local_time->tm_hour = hour;
+    local_time->tm_min = minute;
+    return mktime(local_time);
 }
 
 int parse_time(char *time_str) {
@@ -120,6 +162,7 @@ int parse_12_time(int hour, int minute, char *am_pm) {
     if (tolower(am_pm[0]) == 'p') {
         return parse_24_time(12 + hour % 12, minute);
     }
+    return -1;
 }
 
 int parse_24_time(int hour, int minute) {

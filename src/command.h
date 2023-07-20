@@ -4,6 +4,14 @@
 #define WAKEUP_BOUNDARY_EARLIEST "earliest"
 #define WAKEUP_BOUNDARY_LATEST "latest"
 
+typedef enum {
+    DONE,
+    PREFERENCE_USERNAME,
+    PREFERENCE_WAKEUP_EARLIEST,
+    PREFERENCE_WAKEUP_LATEST,
+    PREFERENCE_ENTRY_DELIMITER
+} Selection;
+
 void command_root();
 
 void command_set_preferences();
