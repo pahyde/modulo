@@ -5,6 +5,7 @@
 #include "modulo.h"
 #include "entry_list.h"
 #include "json.h"
+#include "time_utils.h"
 
 /*
 
@@ -50,6 +51,7 @@ e.g. indexing outside the address boundary of an array, strcpy with strlen(src) 
 */
 
 static time_t default_wakeup();
+static void modulo_increment_day_ptr(Modulo *modulo, int days);
 
 Modulo *create_default_modulo(char *username) {
     Modulo *modulo = malloc(sizeof(Modulo));
@@ -61,7 +63,7 @@ Modulo *create_default_modulo(char *username) {
     modulo_set_entry_delimiter(modulo, "%");
 
     // initialize day pointer
-    time_t day_ptr_0 = get_most_recent(DEFAULT_WAKEUP_LATEST);
+    time_t day_ptr_0 = time_to_utc_prev(DEFAULT_WAKEUP_LATEST, utc_now());
     modulo_set_day_ptr(modulo, day_ptr_0);
 
     // initialize today entry lists
@@ -121,6 +123,10 @@ void modulo_set_history(Modulo *modulo, HistoryQueue history) {
     modulo->history = history;
 }
 
+void modulo_push_history(Modulo *modulo, EntryList *entry_list) {
+    history_queue_push(&modulo->history, entry_list);
+}
+
 // getters
 char *modulo_get_username(Modulo *modulo) { return modulo->username; }
 time_t modulo_get_wakeup_earliest(Modulo *modulo) { return modulo->wakeup_earliest; }
@@ -155,12 +161,48 @@ returns true if sync occurs (day_ptr incremented)
         false otherwise
 */
 bool modulo_check_sync(Modulo *modulo) {
-    time_t now = time(NULL);
-    modulo_sync_forward(modulo, 1);
+    int days_out_of_sync = utc_to_offset(modulo, utc_now()) / (24*60*60);
+    if (days_out_of_sync < 1) {
+        // wakeup latest hasn't occurred today yet
+        return;
+    }
+    modulo_sync_forward(modulo, days_out_of_sync);
 }
 
 void modulo_sync_forward(Modulo *modulo, int days) {
+    if (days <= 1) {
+        return;
+    }
+    // set tomorrow.recv_date;
+    modulo->tomorrow.recv_date = utc_now();
+    // push today to history if non empty
+    if (!entry_list_empty(&modulo->today)) {
+        history_queue_push(&modulo->history, &modulo->today); 
+    }
+    if (days == 1) {
+        modulo_set_today(modulo, modulo->tomorrow);
+    } else {
+        modulo_push_history(modulo, &modulo->tomorrow);
+    }
+    modulo_set_tomorrow(modulo, create_entry_list());
+    modulo_increment_day_ptr(modulo, days);
+}
 
+void modulo_increment_day_ptr(Modulo *modulo, int days) {
+    // day_ptr -> struct tm -> assert(hour, minute) -> += days -> mktime -> day_ptr
+    struct tm *day_ptr_tm = localtime(modulo->day_ptr);
+    clk_time_t day_start = modulo->wakeup_latest;
+    int day_start_hour = day_start / 60;
+    int day_start_min = day_start % 60;
+    if (day_ptr_tm->tm_hour != day_start_hour || day_ptr_tm->tm_min != day_start_min) {
+        fprintf(stderr, "day ptr not synced with wakeup_latest\n");
+        fprintf(stderr, "day_ptr hour: %d, day_ptr min: %d\n", day_ptr_tm->tm_hour, day_ptr_tm->tm_min);
+        day_ptr_tm->tm_hour = day_start_hour;
+        day_ptr_tm->tm_min = day_start_min;
+    }
+    day_ptr_tm->tm_mday += days;
+    time_t next_day_ptr = mktime(day_ptr_tm);
+    modulo->day_ptr = next_day_ptr;
 }
 
 void modulo_sync_with_timestamp(Modulo *modulo, time_t now) {

@@ -16,6 +16,8 @@ static void route_get(int argc, char **argv);
 static void route_get_preferences(int argc, char **argv);
 static void route_get_preference(int argc, char **argv);
 
+static void route_status(int argc, char **argv);
+
 static void route_tomorrow(int argc, char **argv);
 static void route_today(int argc, char **argv);
 static void route_peek(int argc, char **argv);
@@ -49,6 +51,8 @@ void command_router(int argc, char **argv) {
         route_set(argc, argv);
     } else if (strcmp(sub_cmd, COMMAND_GET) == 0) {
         route_get(argc, argv);
+    } else if (strcmp(sub_cmd, COMMAND_STATUS) == 0) {
+        route_status(argc, argv);
     } else if (strcmp(sub_cmd, COMMAND_TOMORROW) == 0) {
         route_tomorrow(argc, argv);
     } else if (strcmp(sub_cmd, COMMAND_TODAY) == 0) {
@@ -160,11 +164,18 @@ void route_get_preference(int argc, char **argv) {
     }
 }
 
+void route_status(int argc, char **argv) {
+    int sub_cmds = 1;
+    int args = 0;
+    check_argc(argc, argv, sub_cmds, args);
+    command_status();
+}
+
 void route_tomorrow(int argc, char **argv) {
     int sub_cmds = 1;
     int args = 0;
     check_argc(argc, argv, sub_cmds, args);
-    command_tomorrow(argc, argv);
+    command_tomorrow();
 }
 
 void route_today(int argc, char **argv) {

@@ -315,17 +315,16 @@ Good morning pahyde!
 }
 
 It's currently 8:45 AM (8:00) July 20, 2023.
-Your next wakeup is scheduled between 7:00 AM - 10:00 AM tomorrow.
+Your next wakeup is scheduled for 7:00 AM - 10:00 AM tomorrow.
 
-status (cli_print_entry_lists()) {
-Your lists:
+Entry List Status
+-----------------
 today    (inbox):  3 entries to review today
 tomorrow (outbox): 0 entries written for tomorrow
 history: 
     1. -
     2. -
     3. -
-}
 
 if (entries.size > 0) {
 You have 3 new entries to review today!

@@ -32,12 +32,14 @@ typedef struct EntryList {
 typedef struct HistoryQueue {
     uint8_t head;
     uint8_t size;
-    EntryList entries[HISTORY_QUEUE_LENGTH];
+    EntryList entry_lists[HISTORY_QUEUE_LENGTH];
 } HistoryQueue;
 
 /* EntryList */
 EntryList create_entry_list();
 void free_entry_list(EntryList *entry_list);
+
+bool entry_list_empty(EntryList *entry_list);
 
 //setters
 void entry_list_set_send_date(EntryList *entry_list, time_t send_date);

@@ -11,6 +11,8 @@
 #define COMMAND_WAKEUP_LATEST "wakeup_latest"
 #define COMMAND_ENTRY_DELIMITER "entry_delimiter"
 
+#define COMMAND_STATUS "status"
+
 #define COMMAND_TOMORROW "tomorrow"
 #define COMMAND_PEEK "peek"
 #define COMMAND_WAKEUP "wakeup"

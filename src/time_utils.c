@@ -8,6 +8,10 @@
 
 static int parse_12_time(int hour, int minute, char *am_pm);
 static int parse_24_time(int hour, int minute);
+static char *tm_to_date_string(struct tm *date, struct tm *ref_date);
+static char *tm_to_time_string(struct tm *time_data);
+static struct tm increment_days(struct tm *date, int days);
+static bool same_day(struct tm *date1, struct tm *date2);
 
 /*
 API
@@ -87,14 +91,14 @@ time_t parse_time(char *)
 /*
 We define offset to be the time in seconds elapsed since the current day pointer
 
-datetime_offset:    calculated dynamically using the current day pointer
-time_of_day_offset: calculated statically using wakeup_latest in minutes
+utc_to_offset:  calculated dynamically using the current day pointer
+time_to_offset: calculated statically using wakeup_latest in minutes
 */
-int datetime_offset(time_t ref_point, Modulo *modulo) {
-    return (int) difftime(ref_point, modulo->day_ptr);
+offset_t utc_to_offset(Modulo *modulo, time_t time_utc) {
+    return (int) difftime(time_utc, modulo->day_ptr);
 }
 
-int time_of_day_offset(int time_minutes, Modulo *modulo) {
+offset_t time_to_offset(Modulo *modulo, clk_time_t time_minutes) {
     // minutes in a day
     int modulus = 24 * 60;
     // time of day offset from the day ptr must be positive by definition
@@ -102,17 +106,17 @@ int time_of_day_offset(int time_minutes, Modulo *modulo) {
 }
 
 void printf_time(char *format, int time_minutes) {
-    char *format_str = format_time(time_minutes);
+    char *format_str = time_to_string(time_minutes);
     printf(format, format_str);
     free(format_str);
 }
 
-int time_of_day(time_t ref_point) {
-    struct tm *local_time = localtime(&ref_point);
+clk_time_t utc_to_time(time_t time_utc) {
+    struct tm *local_time = localtime(&time_utc);
     return local_time->tm_hour * 60 + local_time->tm_min;
 }
 
-time_t get_next_occurrence(int time_minutes, time_t ref_point) {
+time_t time_to_utc_next(int time_minutes, time_t ref_point) {
     struct tm *local_time = localtime(&ref_point);
     int hour = time_minutes / 60;
     int minute = time_minutes % 60;
@@ -129,7 +133,7 @@ time_t get_next_occurrence(int time_minutes, time_t ref_point) {
 
 }
 
-time_t get_most_recent(int time_minutes, time_t ref_point) {
+time_t time_to_utc_prev(int time_minutes, time_t ref_point) {
     struct tm *local_time = localtime(&ref_point);
     int hour = time_minutes / 60;
     int minute = time_minutes % 60;
@@ -145,7 +149,11 @@ time_t get_most_recent(int time_minutes, time_t ref_point) {
     return mktime(local_time);
 }
 
-int parse_time(char *time_str) {
+time_t utc_now() {
+    return time(NULL);
+}
+
+clk_time_t parse_time(char *time_str) {
     int hour = 0;
     int minute = 0;
     char am_pm[3] = {0};
@@ -167,7 +175,83 @@ int parse_time(char *time_str) {
     return -1;
 }
 
-int parse_12_time(int hour, int minute, char *am_pm) {
+
+char *time_to_string(clk_time_t time_minutes) {
+    // hh:mm AM (hh:mm)
+    char *formatted = malloc(FORMAT_TIME_LENGTH+1);
+    int hours_24 = time_minutes / 60;
+    int hours_12 = (12 + hours_24 - 1) % 12 + 1;
+    int minutes = time_minutes % 60;
+    char *am_pm = hours_24 < 12 ? "AM" : "PM";
+    sprintf(formatted, "%02d:%02d %s (%02d:%02d)", hours_12, minutes, am_pm, hours_24, minutes);
+    return formatted;
+}
+
+char *utc_to_string(time_t time_utc) {
+    static char fmt_string[FORMAT_TIME_BUF_SIZE];
+
+    time_t ref_point_utc = time(NULL);
+    struct tm ref_point;
+    memcpy(&ref_point, localtime(&ref_point_utc), sizeof(struct tm));
+    
+    struct tm date;
+    memcpy(&date, localtime(&time_utc), sizeof(struct tm));
+    sprintf(fmt_string, "%s %s", tm_to_date_string(&date, &ref_point), tm_to_time_string(&date));
+    return fmt_string;
+}
+
+char *utc_range_to_string(time_t start_utc, time_t end_utc) {
+    // static wakeup range string
+    static char range_fmt_string[FORMAT_TIME_BUF_SIZE];
+    /*
+    day(start) != day(start) -> individual dates
+    day(start) == day(end)   -> converge dates
+
+    date is yesterday -> yesterday
+    date is today     -> today
+    date is tomorrow  -> tomorrow 
+    otherwise         -> date
+    */
+
+    // calculate local time now
+    time_t now_utc = time(NULL);
+    struct tm now;
+    memcpy(&now, localtime(&now_utc), sizeof(struct tm));
+
+    // calculate start and end local time
+    struct tm start, end;
+    memcpy(&start, localtime(&start_utc), sizeof(struct tm));
+    memcpy(&end, localtime(&end_utc), sizeof(struct tm));
+
+    // build start format string
+    char start_fmt_string[FORMAT_TIME_BUF_SIZE];
+    char *start_date = tm_to_date_string(&start, &now);
+    char *start_time = tm_to_time_string(&start);
+    sprintf(start_fmt_string, "%s %s", start_date, start_time);
+
+    // build end format string
+    char end_fmt_string[FORMAT_TIME_BUF_SIZE];
+    char *end_time = tm_to_time_string(&end);
+    if (!same_day(&start, &end)) {
+        char *end_date = tm_to_date_string(&end, &now);
+        sprintf(end_fmt_string, "%s %s", end_date, end_time);
+    } else {
+        strcpy(end_fmt_string, end_time);
+    }
+    // combine start and end strings into range format string
+    sprintf(range_fmt_string, "%s - %s", start_fmt_string, end_fmt_string);
+    return range_fmt_string;
+}
+
+bool same_day(struct tm *time1, struct tm *time2) {
+    if (time1->tm_year != time2->tm_year) { return false; }
+    if (time1->tm_mon  != time2->tm_mon)  { return false; }
+    if (time1->tm_mday != time2->tm_mday) { return false; }
+    return true;
+}
+
+
+clk_time_t parse_12_time(int hour, int minute, char *am_pm) {
     if (strlen(am_pm) != 2) {
         return -1;
     }
@@ -183,29 +267,39 @@ int parse_12_time(int hour, int minute, char *am_pm) {
     return -1;
 }
 
-int parse_24_time(int hour, int minute) {
+clk_time_t parse_24_time(int hour, int minute) {
     return hour * 60 + minute;
 }
 
-char *format_time(int time_minutes) {
-    // hh:mm AM (hh:mm)
-    char *formatted = malloc(FORMAT_TIME_LENGTH+1);
-    int hours_24 = time_minutes / 60;
-    int hours_12 = (12 + hours_24 - 1) % 12 + 1;
-    int minutes = time_minutes % 60;
-    char *am_pm = hours_24 < 12 ? "AM" : "PM";
-    sprintf(formatted, "%02d:%02d %s (%02d:%02d)", hours_12, minutes, am_pm, hours_24, minutes);
-    return formatted;
+char *tm_to_date_string(struct tm *date, struct tm *ref_date) {
+    static char fmt_string[FORMAT_TIME_BUF_SIZE];
+    struct tm *today = ref_date;
+    struct tm yesterday = increment_days(today, -1);
+    struct tm tomorrow = increment_days(today, 1);
+    if (same_day(date, today)) {
+        strcpy(fmt_string, TODAY);
+    } else if (same_day(date, &yesterday)) {
+        strcpy(fmt_string, YESTERDAY);
+    } else if (same_day(date, &tomorrow)) {
+        strcpy(fmt_string, TOMORROW);
+    } else {
+        strftime(fmt_string, sizeof fmt_string, "%A, %B %d", today);
+    }
+    return fmt_string;
 }
 
-char *format_date_range(Modulo *modulo) {
-    // static wakeup range string
-    char buffer[64];
-    int now = time_of_day(time(NULL));
-    int wakeup_earliest = modulo->wakeup_earliest;
-    int wakeup_latest = modulo->wakeup_latest;
+struct tm increment_days(struct tm *date, int days) {
+    // normalize incremented date
+    date->tm_mday += days;
+    time_t date_utc = mktime(date);
+    date->tm_mday -= days;
+    // convert back to localtime and return
+    struct tm *incremented = localtime(&date_utc);
+    return *incremented;
+}
 
-    time_t day_ptr = modulo->day_ptr;
-    time_t next_wakeup_earliest = get_next_occurrence(wakeup_earliest, day_ptr);
-    time_t next_wakeup_latest = get_next_occurrence(wakeup_latest, day_ptr);
+char *tm_to_time_string(struct tm *date) {
+    static char fmt_string[FORMAT_TIME_BUF_SIZE];
+    strftime(fmt_string, sizeof fmt_string, "%I:%M %p", date);
+    return fmt_string;
 }

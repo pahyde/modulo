@@ -46,8 +46,8 @@ void command_init() {
     printf("Modulo will automatically advance to the next day after this time\n");
     cli_prompt_wakeup_latest(modulo, false);
 
-    time_t recent_wakeup_earliest = get_most_recent(modulo->wakeup_earliest, time(NULL));
-    time_t recent_wakeup_latest = get_most_recent(modulo->wakeup_latest, time(NULL));
+    time_t recent_wakeup_earliest = time_to_utc_prev(modulo->wakeup_earliest, time(NULL));
+    time_t recent_wakeup_latest = time_to_utc_prev(modulo->wakeup_latest, time(NULL));
     if (recent_wakeup_latest < recent_wakeup_earliest) {
         // wakeup_latest < wakeup_earliest < now < wakeup_latest
         cli_prompt_day_ptr(modulo, recent_wakeup_earliest, recent_wakeup_latest);
@@ -191,7 +191,7 @@ void command_get_wakeup_boundary(char *boundary) {
     } else {
         wakeup_time = modulo_get_wakeup_latest(modulo);
     }
-    printf("Current wakeup_%s: %s\n", boundary, format_time(wakeup_time));
+    printf("Current wakeup_%s: %s\n", boundary, time_to_string(wakeup_time));
 
     save_modulo_or_exit(modulo, c);
     free(modulo);
@@ -205,7 +205,18 @@ void command_get_entry_delimiter() {
 
     printf("Current entry_delimiter: %s\n", modulo_get_entry_delimiter(modulo));
 
-    save_modulo_or_exit(modulo, c);
+    free(modulo);
+    free(c);
+}
+
+void command_status() {
+    OSContext *c = get_context();
+    Modulo *modulo = load_synced_modulo(c, true);
+    check_init(modulo);
+
+    cli_print_time_status(modulo);
+    cli_print_entry_lists_status(modulo);
+
     free(modulo);
     free(c);
 }
@@ -238,15 +249,15 @@ void command_wakeup() {
     check_init(modulo);
 
     // times quoted in seconds from day_ptr
-    int now = datetime_offset(time(NULL), modulo);
-    int wakeup_earliest = time_of_day_offset(modulo->wakeup_earliest, modulo);
+    offset_t now = utc_to_offset(time(NULL), modulo);
+    offset_t wakeup_earliest = time_to_offset(modulo->wakeup_earliest, modulo);
 
     // hours until wakeup earliest
     int hours_until_next_wakeup = (wakeup_earliest - now) / 60 / 60;
     if (hours_until_next_wakeup <= 0) {
         wakeup_success(modulo);
     } else if (hours_until_next_wakeup <= 2) {
-        printf_time("The current time %s is pretty early for your usual wakeup range:\n", time_of_day(time(NULL)));
+        printf_time("The current time %s is pretty early for your usual wakeup range:\n", utc_to_time(time(NULL)));
         printf_time("%s - ", modulo->wakeup_earliest);
         printf_time("%s\n\n", modulo->wakeup_latest);
         printf("Are you sure you want to wakeup?\n\n");

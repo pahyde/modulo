@@ -23,6 +23,10 @@ void free_entry_list(EntryList *entry_list) {
     free(entry_list->entries);
 }
 
+bool entry_list_empty(EntryList *entry_list) {
+    return entry_list->size == 0;
+}
+
 //setters
 void entry_list_set_send_date(EntryList *entry_list, time_t send_date) { entry_list->send_date = send_date; }
 void entry_list_set_recv_date(EntryList *entry_list, time_t recv_date) { entry_list->recv_date = recv_date; }
@@ -96,7 +100,7 @@ void free_history_queue(HistoryQueue *history) {
 }
 
 void history_queue_push(HistoryQueue *history, EntryList *entry_list) {
-    EntryList *entry_lists = history->entries;
+    EntryList *entry_lists = history->entry_lists;
     int *head = &history->head;
     int *size = &history->size;
     int tail_index = (*head + *size) % HISTORY_QUEUE_LENGTH;
@@ -117,5 +121,5 @@ EntryList *history_queue_get(HistoryQueue *history, int index) {
         exit(EXIT_FAILURE);
     }
     int head = history->head;
-    return &history->entries[(head + index) % HISTORY_QUEUE_LENGTH];
+    return &history->entry_lists[(head + index) % HISTORY_QUEUE_LENGTH];
 }

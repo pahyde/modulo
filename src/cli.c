@@ -19,8 +19,8 @@ static void cli_gets(char *buffer, size_t buf_size);
 static void clear_stdin();
 
 static void cli_print_wakeup_error_message(char *wakeup);
-static void cli_print_time_status(Modulo *modulo);
-static void cli_print_entry_lists_status(Modulo *modulo);
+
+static char *wakeup_range_to_string(Modulo *modulo);
 
 static void string_tolower(char *str);
 static bool length_ok(char *string, int max_length);
@@ -58,7 +58,6 @@ void cli_print_preferences(Modulo *modulo) {
 void cli_print_wakeup_success(Modulo *modulo) {
     printf("Good morning %s!\n\n", modulo->username);
     cli_print_time_status(modulo);
-    cli_print_entry_lists_status(modulo);
     int new_entries = modulo->today.size;
     if (new_entries > 0) {
         printf("You have %d new entries to review today!\n", new_entries);
@@ -70,14 +69,14 @@ void cli_print_wakeup_success(Modulo *modulo) {
 }
 
 void cli_print_wakeup_failure(Modulo *modulo) {
-    printf("Your next wakeup range is scheduled for %s\n", format_wakeup_range(modulo));
-    printf_time("The current time %s is too early\n", time_of_day(time(NULL)));
+    printf("Your next wakeup range is scheduled for %s\n", wakeup_range_to_string(modulo));
+    printf_time("The current time %s is too early\n", utc_to_time(time(NULL)));
     printf("\nRun `modulo set wakeup_earliest` or `modulo set preferences` to configure your wakeup range\n");
 }
 
 void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t recent_wakeup_latest) {
     time_t now = time(NULL);
-    int time_minutes = time_of_day(now);
+    int time_minutes = utc_to_time(now);
     printf_time(
         "The current time %s is between your wakeup range.\nCan we assume you're up for a new day?\n", 
         time_minutes
@@ -85,7 +84,7 @@ void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t re
     bool is_yes = cli_prompt_yes_or_no();
     time_t day_ptr_0;
     if (is_yes) {
-        time_t next_wakeup_latest = get_next_occurrence(modulo->wakeup_latest, recent_wakeup_earliest);
+        time_t next_wakeup_latest = time_to_utc_next(modulo->wakeup_latest, recent_wakeup_earliest);
         // start new day
         day_ptr_0 = next_wakeup_latest;
     } else {
@@ -391,9 +390,29 @@ void cli_print_wakeup_error_message(char *wakeup) {
 }
 
 void cli_print_time_status(Modulo *modulo) {
-
+    printf("It's currently 8:45 AM (8:00) July 20, 2023.\n", utc_to_string(utc_now()));
+    printf("Your next wakeup is scheduled for %s.\n", wakeup_range_to_string(modulo));
 }
 
 void cli_print_entry_lists_status(Modulo *modulo) {
+    printf("Entry List Status\n");
+    printf("-----------------\n");
+    printf("today    (inbox):  %d entries to review today\n", modulo->today.size);
+    printf("tomorrow (outbox): %d entries written for tomorrow\n", modulo->tomorrow.size);
+    printf("history: \n");
+    for (size_t i = 0; i < HISTORY_QUEUE_LENGTH; i++) {
+        if (i < modulo->history.size) {
+            EntryList *entry_list = &modulo->history.entry_lists[i];
+            printf("    %d. send date: %s\n", i+1, utc_to_string(entry_list->send_date));
+        } else {
+            printf("    %d. -\n");
+        }
+    }
+}
 
+char *wakeup_range_to_string(Modulo *modulo) {
+    time_t day_ptr = modulo->day_ptr;
+    time_t next_wakeup_earliest = time_to_utc_next(modulo->wakeup_earliest, day_ptr);
+    time_t next_wakeup_latest = time_to_utc_next(modulo->wakeup_latest, day_ptr);
+    return utc_range_to_string(next_wakeup_earliest, next_wakeup_latest);
 }

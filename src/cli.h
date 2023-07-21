@@ -25,6 +25,8 @@ void cli_print_init_goodbye(Modulo *modulo);
 void cli_print_preferences(Modulo *modulo);
 void cli_print_wakeup_success(Modulo *modulo);
 void cli_print_wakeup_failure(Modulo *modulo);
+void cli_print_time_status(Modulo *modulo);
+void cli_print_entry_lists_status(Modulo *modulo);
 
 Selection cli_prompt_preference_selection();
 
