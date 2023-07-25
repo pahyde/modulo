@@ -31,7 +31,7 @@ time_t time_to_utc_prev(int time_minutes, time_t ref_point);
 time_t utc_now();
 
 char *time_to_string(clk_time_t time_minutes);
-char *utc_to_string(time_t time_utc);
+char *utc_to_string(time_t time_utc, bool use_relative_labels);
 char *utc_range_to_string(time_t start_utc, time_t end_utc);
 
 #endif

@@ -8,7 +8,7 @@
 
 static int parse_12_time(int hour, int minute, char *am_pm);
 static int parse_24_time(int hour, int minute);
-static char *tm_to_date_string(struct tm *date, struct tm *ref_date);
+static char *tm_to_date_string(struct tm *date, struct tm *ref_date, bool use_relative_labels);
 static char *tm_to_time_string(struct tm *time_data);
 static struct tm increment_days(struct tm *date, int days);
 static bool same_day(struct tm *date1, struct tm *date2);
@@ -102,7 +102,8 @@ offset_t time_to_offset(Modulo *modulo, clk_time_t time_minutes) {
     // minutes in a day
     int modulus = 24 * 60;
     // time of day offset from the day ptr must be positive by definition
-    return ((time_minutes - modulo->wakeup_latest) + modulus) % modulus;
+    int minutes_offset = ((time_minutes - modulo->wakeup_latest) + modulus) % modulus;
+    return minutes_offset * 60;
 }
 
 void printf_time(char *format, int time_minutes) {
@@ -187,7 +188,7 @@ char *time_to_string(clk_time_t time_minutes) {
     return formatted;
 }
 
-char *utc_to_string(time_t time_utc) {
+char *utc_to_string(time_t time_utc, bool use_relative_labels) {
     static char fmt_string[FORMAT_TIME_BUF_SIZE];
 
     time_t ref_point_utc = time(NULL);
@@ -196,7 +197,7 @@ char *utc_to_string(time_t time_utc) {
     
     struct tm date;
     memcpy(&date, localtime(&time_utc), sizeof(struct tm));
-    sprintf(fmt_string, "%s %s", tm_to_date_string(&date, &ref_point), tm_to_time_string(&date));
+    sprintf(fmt_string, "%s %s", tm_to_date_string(&date, &ref_point, use_relative_labels), tm_to_time_string(&date));
     return fmt_string;
 }
 
@@ -225,7 +226,7 @@ char *utc_range_to_string(time_t start_utc, time_t end_utc) {
 
     // build start format string
     char start_fmt_string[FORMAT_TIME_BUF_SIZE];
-    char *start_date = tm_to_date_string(&start, &now);
+    char *start_date = tm_to_date_string(&start, &now, true);
     char *start_time = tm_to_time_string(&start);
     sprintf(start_fmt_string, "%s %s", start_date, start_time);
 
@@ -233,7 +234,7 @@ char *utc_range_to_string(time_t start_utc, time_t end_utc) {
     char end_fmt_string[FORMAT_TIME_BUF_SIZE];
     char *end_time = tm_to_time_string(&end);
     if (!same_day(&start, &end)) {
-        char *end_date = tm_to_date_string(&end, &now);
+        char *end_date = tm_to_date_string(&end, &now, true);
         sprintf(end_fmt_string, "%s %s", end_date, end_time);
     } else {
         strcpy(end_fmt_string, end_time);
@@ -271,13 +272,22 @@ clk_time_t parse_24_time(int hour, int minute) {
     return hour * 60 + minute;
 }
 
-char *tm_to_date_string(struct tm *date, struct tm *ref_date) {
+/*
+use_relative_labels: whether or not to use date labels like yesterday, today, tomorrow
+*/
+char *tm_to_date_string(struct tm *date, struct tm *ref_date, bool use_relative_labels) {
     static char fmt_string[FORMAT_TIME_BUF_SIZE];
+    if (!use_relative_labels) {
+        // return explicit date
+        strftime(fmt_string, sizeof fmt_string, "%A, %B %d", date);
+        return fmt_string;
+    }
+    // convert to relative date if applicable (e.g today, yesterday, tomorrow)
     struct tm *today = ref_date;
     struct tm yesterday = increment_days(today, -1);
     struct tm tomorrow = increment_days(today, 1);
     if (same_day(date, today)) {
-        strcpy(fmt_string, TODAY);
+        strcpy(fmt_string, today);
     } else if (same_day(date, &yesterday)) {
         strcpy(fmt_string, YESTERDAY);
     } else if (same_day(date, &tomorrow)) {

@@ -56,21 +56,23 @@ void cli_print_preferences(Modulo *modulo) {
 }
 
 void cli_print_wakeup_success(Modulo *modulo) {
+    printf("------------------------------------------\n");
     printf("Good morning %s!\n\n", modulo->username);
     cli_print_time_status(modulo);
+    printf("\n");
     int new_entries = modulo->today.size;
     if (new_entries > 0) {
         printf("You have %d new entries to review today!\n", new_entries);
         printf("Run `modulo today` to view them or run `modulo tomorrow` to start journaling your thoughts for tomorrow.\n");
     } else {
-        printf("No entries to review today (You have to start somewhere!)\n");
+        printf("No entries to review today -- You have to start somewhere!\n");
         printf("Run `modulo tomorrow` to start journaling your thoughts for tomorrow.\n");
     }
 }
 
 void cli_print_wakeup_failure(Modulo *modulo) {
     printf("Your next wakeup range is scheduled for %s\n", wakeup_range_to_string(modulo));
-    printf_time("The current time %s is too early\n", utc_to_time(time(NULL)));
+    printf_time("The current time %s is too early\n", utc_to_time(utc_now()));
     printf("\nRun `modulo set wakeup_earliest` or `modulo set preferences` to configure your wakeup range\n");
 }
 
@@ -84,6 +86,14 @@ void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t re
     bool is_yes = cli_prompt_yes_or_no();
     time_t day_ptr_0;
     if (is_yes) {
+        /*
+        Quick note:
+        It may be more reliable to pass in recent and next wakup latest. It's "unbelievably" unlikely
+        that next_wakeup_latest could refer to 24 hours from now as an edge case. But it is, you know,... possible.
+
+        How? If the calling code occurs right before wakeup latest, and this code runs right after. 
+        I doubt there will ever be 2 seconds of latency between these two lines practically speaking.
+        */
         time_t next_wakeup_latest = time_to_utc_next(modulo->wakeup_latest, recent_wakeup_earliest);
         // start new day
         day_ptr_0 = next_wakeup_latest;
@@ -204,11 +214,11 @@ int cli_set_wakeup_earliest(Modulo *modulo, char *wakeup, bool show_prev) {
         cli_print_wakeup_error_message(wakeup);
         return -1;
     }
-    time_t prev_wakeup = modulo_get_wakeup_earliest(modulo);
+    int prev_wakeup = modulo_get_wakeup_earliest(modulo);
     modulo_set_wakeup_earliest(modulo, wakeup_time);
     printf_time("Successfully set earliest wakeup to %s!`\n", wakeup_time);
     if (show_prev) {
-        printf("Previous wakeup_earliest: %s\n", prev_wakeup);
+        printf_time("Previous wakeup_earliest: %s\n", prev_wakeup);
     }
     return 0;
 }
@@ -219,11 +229,11 @@ int cli_set_wakeup_latest(Modulo *modulo, char *wakeup, bool show_prev) {
         cli_print_wakeup_error_message(wakeup);
         return -1;
     }
-    time_t prev_wakeup = modulo_get_wakeup_latest(modulo);
+    int prev_wakeup = modulo_get_wakeup_latest(modulo);
     modulo_set_wakeup_latest(modulo, wakeup_time);
     printf_time("Successfully set latest wakeup to %s!\n", wakeup_time);
     if (show_prev) {
-        printf("Previous wakeup_latest: %s\n", prev_wakeup);
+        printf_time("Previous wakeup_latest: %s\n", prev_wakeup);
     }
     return 0;
 }
@@ -390,7 +400,7 @@ void cli_print_wakeup_error_message(char *wakeup) {
 }
 
 void cli_print_time_status(Modulo *modulo) {
-    printf("It's currently 8:45 AM (8:00) July 20, 2023.\n", utc_to_string(utc_now()));
+    printf("It's currently %s.\n", utc_to_string(utc_now(), false));
     printf("Your next wakeup is scheduled for %s.\n", wakeup_range_to_string(modulo));
 }
 
@@ -403,9 +413,9 @@ void cli_print_entry_lists_status(Modulo *modulo) {
     for (size_t i = 0; i < HISTORY_QUEUE_LENGTH; i++) {
         if (i < modulo->history.size) {
             EntryList *entry_list = &modulo->history.entry_lists[i];
-            printf("    %d. send date: %s\n", i+1, utc_to_string(entry_list->send_date));
+            printf("    %d. send date: %s\n", i+1, utc_to_string(entry_list->send_date, false));
         } else {
-            printf("    %d. -\n");
+            printf("    %d. -\n", i+1);
         }
     }
 }
@@ -413,6 +423,6 @@ void cli_print_entry_lists_status(Modulo *modulo) {
 char *wakeup_range_to_string(Modulo *modulo) {
     time_t day_ptr = modulo->day_ptr;
     time_t next_wakeup_earliest = time_to_utc_next(modulo->wakeup_earliest, day_ptr);
-    time_t next_wakeup_latest = time_to_utc_next(modulo->wakeup_latest, day_ptr);
+    time_t next_wakeup_latest = time_to_utc_next(modulo->wakeup_latest, next_wakeup_earliest);
     return utc_range_to_string(next_wakeup_earliest, next_wakeup_latest);
 }

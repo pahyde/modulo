@@ -8,6 +8,7 @@
 #include "time_utils.h"
 #include "modulo.h"
 #include "cli.h"
+#include "entry_editor.h"
 
 static void command_set_wakeup_boundary(char *boundary, char *wakeup);
 
@@ -46,8 +47,8 @@ void command_init() {
     printf("Modulo will automatically advance to the next day after this time\n");
     cli_prompt_wakeup_latest(modulo, false);
 
-    time_t recent_wakeup_earliest = time_to_utc_prev(modulo->wakeup_earliest, time(NULL));
-    time_t recent_wakeup_latest = time_to_utc_prev(modulo->wakeup_latest, time(NULL));
+    time_t recent_wakeup_earliest = time_to_utc_prev(modulo->wakeup_earliest, utc_now());
+    time_t recent_wakeup_latest = time_to_utc_prev(modulo->wakeup_latest, utc_now());
     if (recent_wakeup_latest < recent_wakeup_earliest) {
         // wakeup_latest < wakeup_earliest < now < wakeup_latest
         cli_prompt_day_ptr(modulo, recent_wakeup_earliest, recent_wakeup_latest);
@@ -124,9 +125,9 @@ void command_set_wakeup_boundary(char *boundary, char *wakeup) {
     check_init(modulo);
 
     if (strcmp(boundary, WAKEUP_BOUNDARY_EARLIEST) == 0) {
-        cli_set_wakeup_earliest(wakeup, modulo, true);
+        cli_set_wakeup_earliest(modulo, wakeup, true);
     } else {
-        cli_set_wakeup_latest(wakeup, modulo, true);
+        cli_set_wakeup_latest(modulo, wakeup, true);
     }
 
     save_modulo_or_exit(modulo, c);
@@ -214,8 +215,11 @@ void command_status() {
     Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
 
+    printf("------------------------------------------\n");
     cli_print_time_status(modulo);
+    printf("\n");
     cli_print_entry_lists_status(modulo);
+    printf("\n");
 
     free(modulo);
     free(c);
@@ -225,6 +229,9 @@ void command_tomorrow() {
     OSContext *c = get_context();
     Modulo *modulo = load_synced_modulo(c, false);
     check_init(modulo);
+
+    entry_editor_start(modulo);
+
     save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
@@ -234,7 +241,9 @@ void command_today() {
     OSContext *c = get_context();
     Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
-    char **today_entries = modulo->today.entries;
+
+    
+
     free(modulo);
     free(c);
 }
@@ -245,18 +254,18 @@ n / m / m = n / (m*m) for ints n,m
 */
 void command_wakeup() {
     OSContext *c = get_context();
-    Modulo *modulo = load_synced_modulo(c, true);
+    Modulo *modulo = load_synced_modulo(c, false);
     check_init(modulo);
 
     // times quoted in seconds from day_ptr
-    offset_t now = utc_to_offset(time(NULL), modulo);
-    offset_t wakeup_earliest = time_to_offset(modulo->wakeup_earliest, modulo);
+    offset_t now = utc_to_offset(modulo, utc_now());
+    offset_t wakeup_earliest = time_to_offset(modulo, modulo->wakeup_earliest);
 
     // hours until wakeup earliest
-    int hours_until_next_wakeup = (wakeup_earliest - now) / 60 / 60;
-    if (hours_until_next_wakeup <= 0) {
+    int minutes_until_next_wakeup = (wakeup_earliest - now) / 60;
+    if (minutes_until_next_wakeup <= 0) {
         wakeup_success(modulo);
-    } else if (hours_until_next_wakeup <= 2) {
+    } else if (minutes_until_next_wakeup <= 2*60) {
         printf_time("The current time %s is pretty early for your usual wakeup range:\n", utc_to_time(time(NULL)));
         printf_time("%s - ", modulo->wakeup_earliest);
         printf_time("%s\n\n", modulo->wakeup_latest);
@@ -270,6 +279,7 @@ void command_wakeup() {
     } else {
         wakeup_failure(modulo);
     }
+    save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
 }

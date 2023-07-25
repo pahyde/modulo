@@ -175,7 +175,10 @@ Journaling
 ----------
 
 modulo today
-You have 3 entries to review today
+
+You have 3 new entries to review today [No entries to review today]
+sent:     Yesterday 10:00 PM
+received: now
 
 1. 
 Lorem ipsem dolor ivet lendonor pervat at te sentin fan batcha lin gemlin
@@ -190,15 +193,30 @@ olor ivet lendonor pervat at te sentin fan batcha lin gemlin
 Lorem ipsem dolor ivet lendonor pervat at te sentin fan batcha lin gemlin
 sdfgdsfg
 
-
-modulo tomorrow
 The modulo tomorrow command let's you journal your thoughts as they come to you. 
 These entries will be available via the `modulo today` command after 08:30 AM tomorrow (your wakeup time).
 
-(entries.count > 0 && You've created 2 entries today so far.)
 
-Compose your entry below. Then type the entry_delimiter (%) to save your entry and start the next.
-Type `done` to abort
+
+
+modulo tomorrow
+
+
+Writing entries for July 23 7:00 AM - 10:45 AM.
+
+Type the entry_delimiter (%) and press enter to save your entry and start the next.
+Type 2 entry delimiters (i.e. `%%`) when you're done to save the last entry and exit.
+_____________________________________________________________________________________________________________________________
+                                                                                    | Today: July 23, 2023
+                                                                                    | wakeup: Tomorrow 7:00 Am - 10:45PM
+                                                                                    | Total entries written: 2
+                                                                                    |
+                                                                                    | Entries:
+                                                                                    | 1. 11:30 AM
+                                                                                    | 2. 12:40 PM
+                                                                                    | 3. 
+                                                                                    |
+
 
 Entry 1:
 Lorem ipsem dolor %

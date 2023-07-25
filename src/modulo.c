@@ -170,7 +170,7 @@ bool modulo_check_sync(Modulo *modulo) {
 }
 
 void modulo_sync_forward(Modulo *modulo, int days) {
-    if (days <= 1) {
+    if (days < 1) {
         return;
     }
     // set tomorrow.recv_date;
@@ -190,7 +190,7 @@ void modulo_sync_forward(Modulo *modulo, int days) {
 
 void modulo_increment_day_ptr(Modulo *modulo, int days) {
     // day_ptr -> struct tm -> assert(hour, minute) -> += days -> mktime -> day_ptr
-    struct tm *day_ptr_tm = localtime(modulo->day_ptr);
+    struct tm *day_ptr_tm = localtime(&modulo->day_ptr);
     clk_time_t day_start = modulo->wakeup_latest;
     int day_start_hour = day_start / 60;
     int day_start_min = day_start % 60;
@@ -206,7 +206,7 @@ void modulo_increment_day_ptr(Modulo *modulo, int days) {
 }
 
 void modulo_sync_with_timestamp(Modulo *modulo, time_t now) {
-    
+
 }
 
 void check_length(char *string, int max_length, char *message) {
