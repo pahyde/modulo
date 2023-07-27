@@ -8,7 +8,7 @@
 #include "time_utils.h"
 #include "modulo.h"
 #include "cli.h"
-#include "entry_editor.h"
+#include "editor/entry_editor.h"
 
 static void command_set_wakeup_boundary(char *boundary, char *wakeup);
 
