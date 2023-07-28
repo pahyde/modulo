@@ -10,7 +10,7 @@ typedef struct WindowModel {
     int width;
     int top;   // going with css absolute-positioning mental model, feels right.
     int left;
-    bool is_hidden;
+    bool content_update;
 } WindowModel;
 
 typedef struct ScreenModel {
@@ -18,13 +18,15 @@ typedef struct ScreenModel {
     int width;
     WindowModel doc_model;
     WindowModel summary_model;
-    bool resize
 } ScreenModel;
 
-ScreenModel *create_screen_model();
+ScreenModel *create_screen_model(int screen_h, int screen_w);
+void free_screen_model(ScreenModel *screen_model);
 
 void screen_model_resize(ScreenModel *screen_model, int height, int width);
 bool screen_model_is_resize(ScreenModel *screen_model);
 void screen_model_set_resize(ScreenModel *screen_model, bool flag);
+
+bool screen_model_is_hidden(WindowModel *window_model);
 
 #endif

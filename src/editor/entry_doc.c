@@ -44,6 +44,7 @@ void line_insert_char(Line *line, char c, size_t index) {
         line->chars[i] = line->chars[i-1];
     }
     line->chars[index] = c;
+    line->length++;
 }
 
 void check_char_capacity(Line *line, size_t required) {
@@ -63,6 +64,7 @@ void check_char_capacity(Line *line, size_t required) {
 void line_cat(Line *dest, Line *src) {
     check_char_capacity(dest, src->length);
     memcpy(dest + dest->length, src, src->length * sizeof(char));
+    dest->length += src->length;
 }
 
 /*
@@ -111,7 +113,7 @@ void entry_doc_backspace(EntryDoc *entry_doc) {
         Line *prev_line = entry_doc_get_line(entry_doc, cursor->i-1);
         entry_doc_move_cursor(entry_doc, cursor->i-1, prev_line->length);
         line_cat(prev_line, &removed);
-        free(removed.chars);
+        free_line(&removed);
         return;
     } 
     // delete char
@@ -121,13 +123,14 @@ void entry_doc_backspace(EntryDoc *entry_doc) {
 }
 
 void line_remove_char(Line *line, size_t index) {
-    if (index >= line->length) {
+    if (index >= line->length || index < 0) {
         fprintf(stderr, "Can't remove character at index %zu from line of length %zu\n", index, line->length);
         exit(EXIT_FAILURE);
     }
     for (size_t i = index+1; i < line->length; i++) {
         line->chars[i-1] = line->chars[i];
     }
+    line->length--;
 }
 
 void entry_doc_enter(EntryDoc *entry_doc) {
@@ -143,7 +146,7 @@ void entry_doc_enter(EntryDoc *entry_doc) {
 
 void entry_doc_insert_line(EntryDoc *entry_doc, Line *line, size_t index) {
     size_t line_count = entry_doc->line_count;
-    if (index > line_count) {
+    if (index > line_count || index < 0) {
         fprintf(stderr, "Can't insert line at index %zu into document with line_count %zu\n", index, line_count);
         exit(EXIT_FAILURE);
     }
@@ -152,6 +155,7 @@ void entry_doc_insert_line(EntryDoc *entry_doc, Line *line, size_t index) {
         entry_doc->lines[i] = entry_doc->lines[i-1];
     }
     entry_doc->lines[index] = *line;
+    entry_doc->line_count++;
 }
 
 void check_line_capacity(EntryDoc *entry_doc) {
@@ -176,7 +180,7 @@ Line *entry_doc_get_line(EntryDoc *entry_doc, size_t index) {
 
 Line entry_doc_remove_line(EntryDoc *entry_doc, size_t index) {
     size_t line_count = entry_doc->line_count;
-    if (index >= line_count) {
+    if (index >= line_count || index < 0) {
         fprintf(stderr, "Can't remove line at index %zu from document with line count %zu\n", index, line_count);
         exit(EXIT_FAILURE);
     }
@@ -184,15 +188,33 @@ Line entry_doc_remove_line(EntryDoc *entry_doc, size_t index) {
     for (size_t i = index+1; i < line_count; i++) {
         entry_doc->lines[i-1] = entry_doc->lines[i];
     }
+    entry_doc->line_count--;
+    // calling function must free chars in removed
     return removed;
 }
 
+/*
+Cursor move functions corresponding to arrow key inputs
+
+implementation allows for phantom j/column index
+when moving cursor up through short lines i.e.
+
+line 1: "Lorem ipsum dolor s|it amet, consectetur adipiscing 
+                            ^
+line 2: elit, sed do        |
+                            ^
+line 3: eiusmod tempor incid|idunt ut labo
+
+The view will check the actually line length
+and render the cursor at MIN(line.length, cursor.j index)
+
+*/
 void entry_doc_cursor_up(EntryDoc *entry_doc, bool limit_range) {
     Index *cursor = &entry_doc->cursor;
     if (limit_range && cursor->i == 0) {
         return;
     }
-    entry_doc_move_cursor(entry_doc, cursor->i-1, cursor->j);
+    cursor->i--;
 }
 
 void entry_doc_cursor_down(EntryDoc *entry_doc, bool limit_range) {
@@ -200,15 +222,17 @@ void entry_doc_cursor_down(EntryDoc *entry_doc, bool limit_range) {
     if (limit_range && cursor->i == entry_doc->line_count-1) {
         return;
     }
-    entry_doc_move_cursor(entry_doc, cursor->i+1, cursor->j);
+    cursor->i++;
 }
 
 void entry_doc_cursor_left(EntryDoc *entry_doc, bool limit_range) {
     Index *cursor = &entry_doc->cursor;
+    Line *line = &entry_doc->lines[cursor->i];
     if (limit_range && cursor->j == 0) {
         return;
     }
-    entry_doc_move_cursor(entry_doc, cursor->i, cursor->j-1);
+    // handle cursor j-index out of range for current line
+    cursor->j = (cursor->j < line->length) ? cursor->j-1 : line->length-1; 
 }
 
 void entry_doc_cursor_right(EntryDoc *entry_doc, bool limit_range) {
@@ -217,9 +241,24 @@ void entry_doc_cursor_right(EntryDoc *entry_doc, bool limit_range) {
     if (limit_range && cursor->j == line->length) {
         return;
     }
-    entry_doc_move_cursor(entry_doc, cursor->i, cursor->j+1);
+    cursor->j++;
 }
 
+/*
+Returns the physical cursor location in the document
+limits the logical cursor (entry_doc->cursor) column index by the current line length
+*/
+Index entry_doc_get_cursor(EntryDoc *entry_doc) {
+    Index cursor = entry_doc->cursor;
+    size_t line_length = entry_doc_get_line(entry_doc, cursor.i)->length;
+    if (cursor.j > line_length) {
+        cursor.j = line_length;
+    }
+    return cursor;
+}
+
+// used by enter and backspace. 
+// should never have cursor out of range for line (unlike single-step functions above)
 void entry_doc_move_cursor(EntryDoc *entry_doc, int i, int j) {
     size_t line_count = entry_doc->line_count;
     if (i < 0 || i >= line_count) {
@@ -233,4 +272,26 @@ void entry_doc_move_cursor(EntryDoc *entry_doc, int i, int j) {
     }
     entry_doc->cursor.i = i;
     entry_doc->cursor.j = j;
+}
+
+void entry_doc_clear(EntryDoc *entry_doc) {
+    entry_doc->cursor = (Index) { .i = 0, .j = 0 };
+    entry_doc->scroll = (Index) { .i = 0, .j = 0 };
+    for (size_t i = 1; i < entry_doc->line_count; i++) {
+        free_line(entry_doc_get_line(entry_doc, i));
+    }
+    entry_doc->line_count = 1;
+    entry_doc_get_line(entry_doc, 0)->length = 0;
+}
+
+void free_entry_doc(EntryDoc *entry_doc) {
+    for (size_t i = 0; i < entry_doc->line_count; i++) {
+        free_line(entry_doc_get_line(entry_doc, i));
+    }
+    free(entry_doc->lines);
+    free(entry_doc);
+}
+
+void free_line(Line *line) {
+    free(line->chars);
 }

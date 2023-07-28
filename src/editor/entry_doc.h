@@ -36,5 +36,11 @@ void entry_doc_cursor_down(EntryDoc *entry_doc, bool limit_range);
 void entry_doc_cursor_left(EntryDoc *entry_doc, bool limit_range);
 void entry_doc_cursor_right(EntryDoc *entry_doc, bool limit_range);
 
+Index entry_doc_get_cursor(EntryDoc *entry_doc);
+Line *entry_doc_get_line(EntryDoc *entry_doc, size_t index);
+
+void entry_doc_clear(EntryDoc *entry_doc);
+void free_entry_doc(EntryDoc *entry_doc);
+
 
 #endif
