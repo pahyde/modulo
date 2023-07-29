@@ -36,7 +36,7 @@ void view_update(
     EntryDoc *entry_doc
 ) {
     view_update_summary_window(summary_win, modulo, &screen_model->summary_model);
-    view_resize_doc_window(doc_win, modulo, entry_doc, &screen_model->doc_model);
+    view_update_doc_window(doc_win, modulo, entry_doc, &screen_model->doc_model);
 }
 
 void view_update_summary_window(WINDOW *summary_win, Modulo *modulo, WindowModel *summary_model) {
@@ -45,16 +45,23 @@ void view_update_summary_window(WINDOW *summary_win, Modulo *modulo, WindowModel
         return;
     }
     // update content
+    box(summary_win, 0, 0);
     mvwprintw(summary_win, 2, 2, "summary");
+    wnoutrefresh(summary_win);
 }
 
 void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc, WindowModel *doc_model) {
+    static int count = 0;
     bool update_required = stage_for_updates(doc_win, doc_model);
     if (!update_required) {
         return;
     }
     // update content
-    mvwprintw(doc_win, 2, 2, "line_count: %zu\n", entry_doc->line_count);
+    if (count == 0) box(doc_win, 0, 0);
+    count++;
+    mvwprintw(doc_win, 2, 2, "line_count: %d", count);
+    wmove(doc_win, 0, 0);
+    wnoutrefresh(doc_win);
 }
 
 void view_render() {
@@ -72,7 +79,7 @@ bool stage_for_updates(WINDOW *win, WindowModel *win_model) {
     }
     if (win_model->content_update) {
         // content update event occurred
-        werase(win);
+        wclear(win);
         return true;
     }
     return false;

@@ -3,6 +3,9 @@
 
 #include <ncurses.h>
 
+#include "../modulo.h"
+#include "../filesystem.h"
+
 /*
 typedef struct EditorEvent {
     type: ENTRY_DELIM, EXIT, RESIZE, KEY_PRESS
@@ -26,6 +29,6 @@ typedef struct EditorEvent {
     int input;
 } EditorEvent;
 
-void entry_editor_start();
+void entry_editor_start(Modulo *modulo, OSContext *c);
 
 #endif

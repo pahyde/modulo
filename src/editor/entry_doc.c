@@ -18,6 +18,7 @@ static Line create_empty_line();
 
 static void check_line_capacity(EntryDoc *entry_doc);
 static void check_char_capacity(Line *line, size_t required);
+static void free_line(Line *line);
 
 EntryDoc *create_entry_doc() {
     EntryDoc *entry_doc = malloc(sizeof(EntryDoc));

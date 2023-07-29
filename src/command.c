@@ -230,7 +230,7 @@ void command_tomorrow() {
     Modulo *modulo = load_synced_modulo(c, false);
     check_init(modulo);
 
-    entry_editor_start(modulo);
+    entry_editor_start(modulo, c);
 
     save_modulo_or_exit(modulo, c);
     free(modulo);

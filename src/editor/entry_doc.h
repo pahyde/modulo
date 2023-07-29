@@ -26,6 +26,7 @@ typedef struct EntryDoc {
     Index scroll;
 } EntryDoc;
 
+EntryDoc *create_entry_doc();
 
 void entry_doc_insert_char(EntryDoc *entry_doc, char c);
 void entry_doc_backspace(EntryDoc *entry_doc);

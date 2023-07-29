@@ -8,14 +8,14 @@ LFLAGS = -lcjson -lncurses
 DEBUG_FLAGS = -g
 
 # Dirs
-SRCDIR  = ./src
-INCDIR  = $(SRCDIR)
-BINDIR  = ./bin
-DATADIR = $(HOME)/.config/modulo
+SRCDIR  := $(shell find ./src -type d)
+INCDIR  := $(SRCDIR)
+BINDIR  := ./bin
+DATADIR := $(HOME)/.config/modulo
 
 # src files
-SRC := $(wildcard $(SRCDIR)/*.c)
-INC := $(wildcard $(INCDIR)/*.h)
+SRC := $(wildcard $(addsuffix /*.c, $(SRCDIR)))
+INC := $(wildcard $(addsuffix /*.h, $(INCDIR)))
 
 .PHONY: dev
 dev: $(BINDIR)/$(TARGET)

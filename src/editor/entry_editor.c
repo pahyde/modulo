@@ -18,12 +18,14 @@ Another example of chronological separation
 */
 
 static void screen_init(int *screen_h, int *screen_w);
-static EditorEvent get_user_event(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc);
 static void screen_exit(WINDOW *doc_win, WINDOW *summary_win);
 
+static EditorEvent get_user_event(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc);
+static EventType get_enter_event_type(Modulo *modulo, EntryDoc *entry_doc);
+static bool is_char_input(int c);
 
 
-start_entry_editory(Modulo *modulo, OSContext *c) {
+void entry_editor_start(Modulo *modulo, OSContext *c) {
     int screen_h, screen_w;
     screen_init(&screen_h, &screen_w);
 
@@ -66,6 +68,7 @@ start_entry_editory(Modulo *modulo, OSContext *c) {
                 break;
             case NONE:
                 model_handle_no_event(screen_model);
+                break;
             default:
                 // shouldn't happen
                 fprintf(stderr, "unexpected event type %d\n", event.type);
@@ -115,14 +118,14 @@ EventType get_enter_event_type(Modulo *modulo, EntryDoc *entry_doc) {
     Line *line = entry_doc_get_line(entry_doc, cursor.i);
     size_t delim_length = strlen(entry_delim);
     // check for single delim
-    if (cursor.j < delim_length) {
+    if ((size_t) cursor.j < delim_length) {
         return ENTER;
     }
     if (strncmp(entry_delim, &line->chars[cursor.j-delim_length], delim_length) != 0) {
         return ENTER;
     }
     // check for double delim
-    if (cursor.j < 2*delim_length) {
+    if ((size_t) cursor.j < 2*delim_length) {
         return ENTRY_SUBMIT;
     }
     if (strncmp(entry_delim, &line->chars[cursor.j-2*delim_length], delim_length) != 0) {

@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "screen_model.h"
 

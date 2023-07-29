@@ -1,16 +1,23 @@
 #include <stdio.h>
 #include <ncurses.h>
+#include <string.h>
 
 #include "../modulo.h"
 #include "../filesystem.h"
 #include "entry_doc.h"
 #include "screen_model.h"
 
+static void remove_exit_delim(Modulo *modulo, EntryDoc *entry_doc);
+static void remove_entry_delim(Modulo *modulo, EntryDoc *entry_doc);
 static void submit_entry(Modulo *modulo, EntryDoc *entry_doc);
 static void log_updates(ScreenModel *screen_model, bool doc_updated, bool summary_updated);
+static void save_modulo_or_exit(Modulo *modulo, OSContext *c);
+
+static bool is_empty(EntryDoc *entry_doc);
+static char *entry_doc_to_string(EntryDoc *entry_doc);
 
 void model_handle_exit(Modulo *modulo, OSContext *c, EntryDoc *entry_doc) {
-    remove_exit_delim(entry_doc);
+    remove_exit_delim(modulo, entry_doc);
     if (is_empty(entry_doc)) {
         return;
     }
@@ -19,7 +26,7 @@ void model_handle_exit(Modulo *modulo, OSContext *c, EntryDoc *entry_doc) {
 }
 
 void model_handle_entry_submit(Modulo *modulo, OSContext *c, ScreenModel *screen_model, EntryDoc *entry_doc) {
-    remove_entry_delim(entry_doc);
+    remove_entry_delim(modulo, entry_doc);
     submit_entry(modulo, entry_doc);
     save_modulo_or_exit(modulo, c);
     entry_doc_clear(entry_doc);
@@ -43,7 +50,7 @@ void model_handle_enter(Modulo *modulo, ScreenModel *screen_model, EntryDoc *ent
     log_updates(screen_model, true, false);
 }
 
-void model_handle_cursor_move(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc, char dir) {
+void model_handle_cursor_move(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc, int dir) {
     switch (dir) {
         case KEY_UP:
             entry_doc_cursor_up(entry_doc, true);
@@ -99,4 +106,42 @@ void submit_entry(Modulo *modulo, EntryDoc *entry_doc) {
 void log_updates(ScreenModel *screen_model, bool doc_updated, bool summary_updated) {
     screen_model->doc_model.content_update = doc_updated;
     screen_model->summary_model.content_update = summary_updated;
+}
+
+void remove_exit_delim(Modulo *modulo, EntryDoc *entry_doc) {
+    size_t entry_delim_length = strlen(modulo->entry_delimiter);
+    for (size_t i = 0; i < 2*entry_delim_length; i++) {
+        entry_doc_backspace(entry_doc);
+    }
+}
+
+void remove_entry_delim(Modulo *modulo, EntryDoc *entry_doc) {
+    size_t entry_delim_length = strlen(modulo->entry_delimiter);
+    for (size_t i = 0; i < entry_delim_length; i++) {
+        entry_doc_backspace(entry_doc);
+    }
+}
+
+char *entry_doc_to_string(EntryDoc *entry_doc) {
+    size_t line_count = entry_doc->line_count;
+    size_t char_count = 0;
+    for (size_t i = 0; i < line_count; i++) {
+        char_count += entry_doc_get_line(entry_doc, i)->length;
+    }
+    // strlen = char_count + line_count (newlines) + 1 (null terminator)
+    char *entry_string = malloc((line_count + char_count + 1) * sizeof(char));
+    size_t start = 0;
+    for (size_t i = 0; i < line_count; i++) {
+        Line *line = entry_doc_get_line(entry_doc, i);
+        size_t length = line->length;
+        memcpy(&entry_string[start], line, length);
+        entry_string[start+length] = '\n';
+        start = length+1;
+    }
+    entry_string[start] = '\0';
+    return entry_string;
+}
+
+bool is_empty(EntryDoc *entry_doc) {
+    return entry_doc->line_count == 1 && entry_doc_get_line(entry_doc, 0)->length == 0;
 }
