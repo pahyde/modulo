@@ -84,6 +84,7 @@ bool stage_for_updates(WINDOW *win, WindowModel *win_model) {
     if (true || win_model->height != win_h || win_model->width != win_w) {
         // resize event occurred
         wclear(win);
+        wnoutrefresh(win);
         wresize(win, win_model->height, win_model->width);
         mvwin(win, win_model->top, win_model->left);
         return true;
