@@ -12,6 +12,6 @@ WINDOW *view_init_doc_window(ScreenModel *screen_model);
 WINDOW *view_init_summary_window(ScreenModel *screen_model);
 
 void view_update(WINDOW *doc_win, WINDOW *summary_win, Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc);
-void view_render();
+void view_render(WINDOW *doc_win, WINDOW *summary_win);
 
 #endif

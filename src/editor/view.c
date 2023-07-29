@@ -46,8 +46,9 @@ void view_update_summary_window(WINDOW *summary_win, Modulo *modulo, WindowModel
     }
     // update content
     box(summary_win, 0, 0);
-    mvwprintw(summary_win, 2, 2, "summary");
-    wnoutrefresh(summary_win);
+    int h, w;
+    getmaxyx(summary_win, h, w);
+    mvwprintw(summary_win, 2, 2, "height: %d width: %d", h, w);
 }
 
 void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc, WindowModel *doc_model) {
@@ -68,20 +69,23 @@ void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc
     mvwprintw(doc_win, 4, 2, "mod_height: %d mod_width: %d", doc_model->height, doc_model->width);
     mvwprintw(doc_win, 5, 2, "scr_height: %d scr_width: %d", sh, sw);
     wmove(doc_win, 0, 0);
-    wnoutrefresh(doc_win);
 }
 
-void view_render() {
+void view_render(WINDOW *doc_win, WINDOW *summary_win) {
+    //refresh();
+    wnoutrefresh(summary_win);
+    wnoutrefresh(doc_win);
     doupdate();
 }
 
 bool stage_for_updates(WINDOW *win, WindowModel *win_model) {
     int win_h, win_w;
     getmaxyx(win, win_h, win_w);
-    if (win_model->height != win_h || win_model->width != win_w) {
+    if (true || win_model->height != win_h || win_model->width != win_w) {
         // resize event occurred
         wclear(win);
         wresize(win, win_model->height, win_model->width);
+        mvwin(win, win_model->top, win_model->left);
         return true;
     }
     if (win_model->content_update) {
