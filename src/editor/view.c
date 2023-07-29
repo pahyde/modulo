@@ -57,9 +57,16 @@ void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc
         return;
     }
     // update content
-    if (count == 0) box(doc_win, 0, 0);
+    box(doc_win, 0, 0);
     count++;
+    int h, w;
+    getmaxyx(doc_win, h, w);
+    int sh, sw;
+    getmaxyx(stdscr, sh, sw);
     mvwprintw(doc_win, 2, 2, "line_count: %d", count);
+    mvwprintw(doc_win, 3, 2, "win_height: %d win_width: %d", h, w);
+    mvwprintw(doc_win, 4, 2, "mod_height: %d mod_width: %d", doc_model->height, doc_model->width);
+    mvwprintw(doc_win, 5, 2, "scr_height: %d scr_width: %d", sh, sw);
     wmove(doc_win, 0, 0);
     wnoutrefresh(doc_win);
 }
@@ -80,6 +87,7 @@ bool stage_for_updates(WINDOW *win, WindowModel *win_model) {
     if (win_model->content_update) {
         // content update event occurred
         wclear(win);
+        wresize(win, win_model->height, win_model->width);
         return true;
     }
     return false;
