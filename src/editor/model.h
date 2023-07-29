@@ -6,6 +6,8 @@
 #include "entry_doc.h"
 #include "screen_model.h"
 
+void model_reset(ScreenModel *screen_model);
+
 void model_handle_exit(Modulo *modulo, OSContext *c, EntryDoc *entry_doc);
 void model_handle_entry_submit(Modulo *modulo, OSContext *c, ScreenModel *screen_model, EntryDoc *entry_doc);
 void model_handle_resize(Modulo *modulo, ScreenModel *screen_model);

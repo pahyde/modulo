@@ -38,30 +38,39 @@ void init_window_models(ScreenModel *screen_model, int screen_h, int screen_w) {
 }
 
 void init_doc_model(WindowModel *doc_model) {
-    doc_model->top = 0; 
+    doc_model->pos_y = 0; 
     doc_model->content_update = true;
+    doc_model->size_update = false;
 }
 
 void init_summary_model(WindowModel *summary_model) {
-    summary_model->top = 0;
-    summary_model->left = 0;
+    summary_model->pos_y = 0;
+    summary_model->pos_x = 0;
     summary_model->content_update = true;
+    summary_model->size_update = false;
 }
 
 void resize_doc_model(WindowModel *doc_model, int screen_h, int screen_w, bool is_small_width) {
     doc_model->height = screen_h;
+    doc_model->size_update = true;
     if (is_small_width) {
         doc_model->width = screen_w;
-        doc_model->left = 0;
+        doc_model->pos_x = 0;
     } else {
         doc_model->width = screen_w - SUMMARY_WIN_WIDTH;
-        doc_model->left = SUMMARY_WIN_WIDTH;
+        doc_model->pos_x = SUMMARY_WIN_WIDTH;
     }
 }
 
 void resize_summary_model(WindowModel *summary_model, int screen_h, int screen_w, bool is_small_width) {
-    summary_model->height = screen_h;
-    summary_model->width = is_small_width ? 0 : SUMMARY_WIN_WIDTH;
+    int new_height = screen_h;
+    int new_width = is_small_width ? 0 : SUMMARY_WIN_WIDTH;
+    bool height_update = new_height != summary_model->height;
+    bool width_update = new_width != summary_model->width;
+
+    summary_model->size_update = height_update || width_update;
+    summary_model->height = new_height;
+    summary_model->width = new_width;
 }
 
 void screen_model_resize(ScreenModel *screen_model, int height, int width) {

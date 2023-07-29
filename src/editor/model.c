@@ -16,6 +16,15 @@ static void save_modulo_or_exit(Modulo *modulo, OSContext *c);
 static bool is_empty(EntryDoc *entry_doc);
 static char *entry_doc_to_string(EntryDoc *entry_doc);
 
+void model_reset(ScreenModel *screen_model) {
+    WindowModel *doc_model = &screen_model->doc_model;
+    WindowModel *summary_model = &screen_model->summary_model;
+    doc_model->content_update = false;
+    doc_model->size_update = false;
+    summary_model->content_update = false;
+    summary_model->size_update = false;
+}
+
 void model_handle_exit(Modulo *modulo, OSContext *c, EntryDoc *entry_doc) {
     remove_exit_delim(modulo, entry_doc);
     if (is_empty(entry_doc)) {
@@ -30,24 +39,24 @@ void model_handle_entry_submit(Modulo *modulo, OSContext *c, ScreenModel *screen
     submit_entry(modulo, entry_doc);
     save_modulo_or_exit(modulo, c);
     entry_doc_clear(entry_doc);
-    log_updates(screen_model, true, true);
+    log_content_update(&screen_model->doc_model);
+    log_content_update(&screen_model->summary_model);
 }
 
 void model_handle_resize(Modulo *modulo, ScreenModel *screen_model) {
     int screen_h, screen_w;
     getmaxyx(stdscr, screen_h, screen_w);
     screen_model_resize(screen_model, screen_h, screen_w);
-    log_updates(screen_model, false, false);
 }
 
 void model_handle_backspace(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc) {
     entry_doc_backspace(entry_doc);
-    log_updates(screen_model, true, false);
+    log_content_update(&screen_model->doc_model);
 }
 
 void model_handle_enter(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc) {
     entry_doc_enter(entry_doc);
-    log_updates(screen_model, true, false);
+    log_content_update(&screen_model->doc_model);
 }
 
 void model_handle_cursor_move(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc, int dir) {
@@ -69,17 +78,15 @@ void model_handle_cursor_move(Modulo *modulo, ScreenModel *screen_model, EntryDo
             fprintf(stderr, "Unrecognized cursor move event\n");
             exit(EXIT_FAILURE);
     }
-    log_updates(screen_model, true, false);
+    log_content_update(&screen_model->doc_model);
 }
 
 void model_handle_char_input(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc, char input) {
     entry_doc_insert_char(entry_doc, input);
-    log_updates(screen_model, true, false);
+    log_content_update(&screen_model->doc_model);
 }
 
-void model_handle_no_event(ScreenModel *screen_model) {
-    log_updates(screen_model, false, false);
-}
+void model_handle_no_event(ScreenModel *screen_model) { return; }
 
 void model_check_scroll(ScreenModel *screen_model, EntryDoc *entry_doc) {
     /*
@@ -103,9 +110,8 @@ void submit_entry(Modulo *modulo, EntryDoc *entry_doc) {
     modulo_push_tomorrow(modulo, entry);
 }
 
-void log_updates(ScreenModel *screen_model, bool doc_updated, bool summary_updated) {
-    screen_model->doc_model.content_update = doc_updated;
-    screen_model->summary_model.content_update = summary_updated;
+void log_content_update(WindowModel *win_model) {
+    win_model->content_update = true;
 }
 
 void remove_exit_delim(Modulo *modulo, EntryDoc *entry_doc) {

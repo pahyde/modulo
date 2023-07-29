@@ -202,20 +202,20 @@ These entries will be available via the `modulo today` command after 08:30 AM to
 modulo tomorrow
 
 
-Writing entries for July 23 7:00 AM - 10:45 AM.
+Modulo Entry Editor
 
-Type the entry_delimiter (%) and press enter to save your entry and start the next.
-Type 2 entry delimiters (i.e. `%%`) when you're done to save the last entry and exit.
+Type `%` and press enter to submit. 
+Entry `%%` when you're done to save and exit.
 _____________________________________________________________________________________________________________________________
-                                                                                    | Today: July 23, 2023
-                                                                                    | wakeup: Tomorrow 7:00 Am - 10:45PM
-                                                                                    | Total entries written: 2
-                                                                                    |
-                                                                                    | Entries:
-                                                                                    | 1. 11:30 AM
-                                                                                    | 2. 12:40 PM
-                                                                                    | 3. 
-                                                                                    |
+Today: July 23, 2023
+wakeup: Tomorrow 7:00 Am - 10:45PM
+Total entries written: 2
+
+Entries:
+1. 11:30 AM
+2. 12:40 PM
+3. 
+
 
 
 Entry 1:

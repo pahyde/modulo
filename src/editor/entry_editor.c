@@ -41,6 +41,9 @@ void entry_editor_start(Modulo *modulo, OSContext *c) {
         // Render view to terminal
         view_render(doc_win, summary_win);
 
+        // Reset size and content update flags
+        model_reset(screen_model);
+
         // get user input
         EditorEvent event = get_user_event(doc_win, modulo, entry_doc);
         if (event.type == EXIT) {
@@ -82,34 +85,27 @@ void entry_editor_start(Modulo *modulo, OSContext *c) {
 }
 
 EditorEvent get_user_event(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc) {
-    static EditorEvent event;
     int c = wgetch(doc_win);
     switch (c) {
         case KEY_ENTER:
         case '\n':
         case '\r':
             EventType type = get_enter_event_type(modulo, entry_doc);
-            event = (EditorEvent) { .type = type };
-            break;
+            return (EditorEvent) { .type = type };
         case KEY_BACKSPACE:
-            event = (EditorEvent) { .type = BACKSPACE };
-            break;
+            return (EditorEvent) { .type = BACKSPACE };
         case KEY_UP:
         case KEY_DOWN:
         case KEY_LEFT:
         case KEY_RIGHT:
-            event = (EditorEvent) { .type = CURSOR_MOVE, .input = c };
-            break;
+            return (EditorEvent) { .type = CURSOR_MOVE, .input = c };
         case KEY_RESIZE:
-            event = (EditorEvent) { .type = RESIZE };
-            break;
+            return (EditorEvent) { .type = RESIZE };
     }
     if (is_char_input(c)) {
-        event = (EditorEvent) { .type = CHAR_INPUT, .input = c };
-    } else {
-        event = (EditorEvent) { .type = NONE };
-    }
-    return event;
+        return (EditorEvent) { .type = CHAR_INPUT, .input = c };
+    } 
+    return (EditorEvent) { .type = NONE };
 }
 
 EventType get_enter_event_type(Modulo *modulo, EntryDoc *entry_doc) {

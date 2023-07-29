@@ -5,12 +5,28 @@
 
 #define SUMMARY_WIN_WIDTH 28
 
+#define SUMMARY_WIN_PADDING 2
+#define DOC_WIN_PADDING 2
+#define DOC_WIN_HEADER_HEIGHT 
+
+typedef struct SubWindow {
+    int height;
+    int width;
+    int pos_y;  
+    int pos_x;  
+    int top;   // going with css absolute-positioning mental model, feels right.
+    int bottom;
+    int left;
+    int right;
+} SubWindow;
+
 typedef struct WindowModel {
     int height;
     int width;
-    int top;   // going with css absolute-positioning mental model, feels right.
-    int left;
+    int pos_y;   
+    int pos_x;
     bool content_update;
+    bool size_update;
 } WindowModel;
 
 typedef struct ScreenModel {

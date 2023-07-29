@@ -14,7 +14,7 @@ static void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *en
 
 WINDOW *view_init_doc_window(ScreenModel *screen_model) {
     WindowModel *doc_model = &screen_model->doc_model;
-    WINDOW *doc_win = newwin(doc_model->height, doc_model->width, doc_model->top, doc_model->left);
+    WINDOW *doc_win = newwin(doc_model->height, doc_model->width, doc_model->pos_y, doc_model->pos_x);
     // scrolling handled explicitly in data model
     scrollok(doc_win, false);
     keypad(doc_win, true);
@@ -23,7 +23,7 @@ WINDOW *view_init_doc_window(ScreenModel *screen_model) {
 
 WINDOW *view_init_summary_window(ScreenModel *screen_model) {
     WindowModel *summary_model = &screen_model->summary_model;
-    WINDOW *summary_win = newwin(summary_model->height, summary_model->width, summary_model->top, summary_model->left);
+    WINDOW *summary_win = newwin(summary_model->height, summary_model->width, summary_model->pos_y, summary_model->pos_x);
     scrollok(summary_win, false);
     return summary_win;
 }
@@ -33,8 +33,7 @@ void view_update(
     WINDOW *summary_win, 
     Modulo *modulo, 
     ScreenModel *screen_model,
-    EntryDoc *entry_doc
-) {
+    EntryDoc *entry_doc) {
     view_update_summary_window(summary_win, modulo, &screen_model->summary_model);
     view_update_doc_window(doc_win, modulo, entry_doc, &screen_model->doc_model);
 }
@@ -68,7 +67,7 @@ void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc
     mvwprintw(doc_win, 3, 2, "win_height: %d win_width: %d", h, w);
     mvwprintw(doc_win, 4, 2, "mod_height: %d mod_width: %d", doc_model->height, doc_model->width);
     mvwprintw(doc_win, 5, 2, "scr_height: %d scr_width: %d", sh, sw);
-    wmove(doc_win, 0, 0);
+    wmove(doc_win, 2, 2);
 }
 
 void view_render(WINDOW *doc_win, WINDOW *summary_win) {
@@ -79,20 +78,17 @@ void view_render(WINDOW *doc_win, WINDOW *summary_win) {
 }
 
 bool stage_for_updates(WINDOW *win, WindowModel *win_model) {
-    int win_h, win_w;
-    getmaxyx(win, win_h, win_w);
-    if (true || win_model->height != win_h || win_model->width != win_w) {
+    if (win_model->size_update) {
         // resize event occurred
         wclear(win);
         wnoutrefresh(win);
         wresize(win, win_model->height, win_model->width);
-        mvwin(win, win_model->top, win_model->left);
+        mvwin(win, win_model->pos_y, win_model->pos_x);
         return true;
     }
     if (win_model->content_update) {
         // content update event occurred
-        wclear(win);
-        wresize(win, win_model->height, win_model->width);
+        werase(win);
         return true;
     }
     return false;
