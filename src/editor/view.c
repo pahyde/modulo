@@ -22,6 +22,7 @@ static int min(int a, int b);
 static void printf_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *fmt, ...);
 static void print_dim(WINDOW *win, SubWindow *sub_win);
 static void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc);
+static void doc_move_cursor(WINDOW *doc_win, SubWindow *entry_content, Index *cursor);
 static void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, Line *line);
 
 
@@ -72,9 +73,11 @@ void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc
     }
     SubWindow *header = &doc_model->header;
     SubWindow *entry_content = &doc_model->entry_content;
+    Index cursor = entry_doc_get_cursor(entry_doc);
     // update content
     box(doc_win, 0, 0);
     print_entry_doc_content(doc_win, &doc_model->entry_content, entry_doc);
+    doc_move_cursor(doc_win, entry_content, &cursor);
 }
 
 void print_dim(WINDOW *win, SubWindow *sub_win) {
@@ -150,6 +153,14 @@ void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc
         // TODO > (2)
         printf_win(doc_win, entry_content, i, 0, buffer);
     }
+}
+
+void doc_move_cursor(WINDOW *doc_win, SubWindow *entry_content, Index *cursor) {
+    int i = entry_content->pos_y + entry_content->top;
+    int j = entry_content->pos_x + entry_content->left;
+    int i_offset = cursor->i;
+    int j_offset = cursor->j;
+    wmove(doc_win, i + i_offset, j + j_offset);
 }
 
 void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, Line *line) {

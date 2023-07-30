@@ -137,8 +137,8 @@ void entry_doc_backspace(EntryDoc *entry_doc) {
     } 
     // delete char
     Line *line = entry_doc_get_line(entry_doc, cursor->i);
-    line_remove_char(line, cursor->j);
     entry_doc_cursor_left(entry_doc, false);
+    line_remove_char(line, cursor->j);
 }
 
 void line_remove_char(Line *line, size_t index) {
