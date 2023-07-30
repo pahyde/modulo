@@ -64,16 +64,16 @@ void model_handle_enter(Modulo *modulo, ScreenModel *screen_model, EntryDoc *ent
 void model_handle_cursor_move(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc, int dir) {
     switch (dir) {
         case KEY_UP:
-            entry_doc_cursor_up(entry_doc, true);
+            entry_doc_cursor_up(entry_doc);
             break;
         case KEY_DOWN:
-            entry_doc_cursor_up(entry_doc, true);
+            entry_doc_cursor_down(entry_doc);
             break;
         case KEY_LEFT:
-            entry_doc_cursor_up(entry_doc, true);
+            entry_doc_cursor_left(entry_doc);
             break;
         case KEY_RIGHT:
-            entry_doc_cursor_up(entry_doc, true);
+            entry_doc_cursor_right(entry_doc);
             break;
         default:
             // shouldn't happen
@@ -91,19 +91,18 @@ void model_handle_char_input(Modulo *modulo, ScreenModel *screen_model, EntryDoc
 void model_handle_no_event(ScreenModel *screen_model) { return; }
 
 void model_check_scroll(ScreenModel *screen_model, EntryDoc *entry_doc) {
-    return;
-    Index cursor = entry_doc_get_cursor(entry_doc);
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
     Index *scroll = &entry_doc->scroll;
     SubWindow *entry_doc_content = &screen_model->doc_model.entry_content;
     int content_height = entry_doc_content->height;
     int content_width = entry_doc_content->width;
-    scroll->i = max(scroll->i, cursor.i - (content_height-1));
-    scroll->j = max(scroll->j, cursor.j - (content_width-1));
+    // scroll <= cursor && scroll >= (cursor.i-(height-1), cursor.j-(width-1)) 
+    scroll->i = min(cursor.i, max(scroll->i, cursor.i - (content_height-1)));
+    scroll->j = min(cursor.j, max(scroll->j, cursor.j - (content_width-1)));
 }
 
-int max(int a, int b) {
-    return a > b ? a : b;
-}
+int max(int a, int b) { return a > b ? a : b; }
+int min(int a, int b) { return a < b ? a : b; }
     
 void save_modulo_or_exit(Modulo *modulo, OSContext *c) {
     if (save_modulo(modulo, c) == -1) {

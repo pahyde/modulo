@@ -109,7 +109,7 @@ EditorEvent get_user_event(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc)
 }
 
 EventType get_enter_event_type(Modulo *modulo, EntryDoc *entry_doc) {
-    Index cursor = entry_doc_get_cursor(entry_doc);
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
     char *entry_delim = modulo_get_entry_delimiter(modulo);
     Line *line = entry_doc_get_line(entry_doc, cursor.i);
     size_t delim_length = strlen(entry_delim);

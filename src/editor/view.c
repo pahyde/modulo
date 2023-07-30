@@ -22,8 +22,8 @@ static int min(int a, int b);
 static void printf_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *fmt, ...);
 static void print_dim(WINDOW *win, SubWindow *sub_win);
 static void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc);
-static void doc_move_cursor(WINDOW *doc_win, SubWindow *entry_content, Index *cursor);
-static void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, Line *line);
+static void doc_move_cursor(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc);
+static void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, char *line);
 
 
 WINDOW *view_init_doc_window(ScreenModel *screen_model) {
@@ -73,11 +73,13 @@ void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc
     }
     SubWindow *header = &doc_model->header;
     SubWindow *entry_content = &doc_model->entry_content;
-    Index cursor = entry_doc_get_cursor(entry_doc);
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
     // update content
     box(doc_win, 0, 0);
+    printf_win(doc_win, header, 0, 0, "cursor i: %d, j: %d", cursor.i, cursor.j);
+    printf_win(doc_win, header, 1, 0, "scroll i: %d, j: %d", entry_doc->scroll.i, entry_doc->scroll.j);
     print_entry_doc_content(doc_win, &doc_model->entry_content, entry_doc);
-    doc_move_cursor(doc_win, entry_content, &cursor);
+    doc_move_cursor(doc_win, entry_content, entry_doc);
 }
 
 void print_dim(WINDOW *win, SubWindow *sub_win) {
@@ -147,25 +149,28 @@ void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc
         // get start and end (exclusive) char index
         Line *line = entry_doc_get_line(entry_doc, i);
         size_t start_j = scroll->j;
-        size_t end_j = min(scroll->j + width, line->length);
+        // TODO constrain(value, min, max)
+        size_t end_j = max(scroll->j, min(scroll->j + width, line->length));
         // get visible slice and print to virt screen
         cpy_line_slice(buffer, start_j, end_j, line->chars);
         // TODO > (2)
-        printf_win(doc_win, entry_content, i, 0, buffer);
+        print_win(doc_win, entry_content, i-start_i, 0, buffer);
     }
 }
 
-void doc_move_cursor(WINDOW *doc_win, SubWindow *entry_content, Index *cursor) {
+void doc_move_cursor(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc) {
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
+    Index scroll = entry_doc->scroll;
     int i = entry_content->pos_y + entry_content->top;
     int j = entry_content->pos_x + entry_content->left;
-    int i_offset = cursor->i;
-    int j_offset = cursor->j;
+    int i_offset = cursor.i - scroll.i;
+    int j_offset = cursor.j - scroll.j;
     wmove(doc_win, i + i_offset, j + j_offset);
 }
 
-void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, Line *line) {
+void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, char *line) {
     size_t length = end_j - start_j;
-    memcpy(buffer, line, length * sizeof(char));
+    memcpy(buffer, (line + start_j), length * sizeof(char));
     buffer[length] = '\0';
 }
 
@@ -179,6 +184,12 @@ void printf_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, con
     vwprintw(win, fmt, args);
 }
 
-int min(int a, int b) {
-    return a < b ? a : b;
+void print_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *line) {
+    int y = sub_win->pos_y + sub_win->top;
+    int x = sub_win->pos_x + sub_win->left;
+    wmove(win, y + offset_y, x + offset_x);
+    waddstr(win, line);
 }
+
+int min(int a, int b) { return a < b ? a : b; }
+int max(int a, int b) { return a > b ? a : b; }

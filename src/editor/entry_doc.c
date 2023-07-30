@@ -24,6 +24,9 @@ static void check_line_capacity(EntryDoc *entry_doc);
 static void check_char_capacity(Line *line, size_t required);
 static void free_line(Line *line);
 
+static int min(int a, int b);
+static int max(int a, int b);
+
 EntryDoc *create_entry_doc(Modulo *modulo) {
     EntryDoc *entry_doc = malloc(sizeof(EntryDoc));
     entry_doc->capacity = INIT_LINE_COUNT_CAP;
@@ -82,7 +85,9 @@ void check_char_capacity(Line *line, size_t required) {
 
 void line_cat(Line *dest, Line *src) {
     check_char_capacity(dest, src->length);
-    memcpy(dest + dest->length, src, src->length * sizeof(char));
+    char *dest_chars = dest->chars;
+    char *src_chars = src->chars;
+    memcpy(dest_chars + dest->length, src_chars, src->length * sizeof(char));
     dest->length += src->length;
 }
 
@@ -113,32 +118,32 @@ Line create_line(size_t capacity) {
 }
 
 void entry_doc_insert_char(EntryDoc *entry_doc, char c) {
-    Index *cursor = &entry_doc->cursor;
-    Line *line = entry_doc_get_line(entry_doc, cursor->i);
-    line_insert_char(line, c, cursor->j);
-    entry_doc_cursor_right(entry_doc, false);
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
+    Line *line = entry_doc_get_line(entry_doc, cursor.i);
+    line_insert_char(line, c, cursor.j);
+    entry_doc_cursor_right(entry_doc);
 }
 
 void entry_doc_backspace(EntryDoc *entry_doc) {
-    Index *cursor = &entry_doc->cursor;
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
 
-    if (cursor->i == 0 && cursor->j == 0) {
+    if (cursor.i == 0 && cursor.j == 0) {
         // top of document
         return;
     }
-    if (cursor->j == 0) {
+    if (cursor.j == 0) {
         // line start
-        Line removed = entry_doc_remove_line(entry_doc, cursor->i);
-        Line *prev_line = entry_doc_get_line(entry_doc, cursor->i-1);
-        entry_doc_move_cursor(entry_doc, cursor->i-1, prev_line->length);
+        Line removed = entry_doc_remove_line(entry_doc, cursor.i);
+        Line *prev_line = entry_doc_get_line(entry_doc, cursor.i-1);
+        entry_doc_move_cursor(entry_doc, cursor.i-1, prev_line->length);
         line_cat(prev_line, &removed);
         free_line(&removed);
         return;
     } 
     // delete char
-    Line *line = entry_doc_get_line(entry_doc, cursor->i);
-    entry_doc_cursor_left(entry_doc, false);
-    line_remove_char(line, cursor->j);
+    Line *line = entry_doc_get_line(entry_doc, cursor.i);
+    entry_doc_cursor_left(entry_doc);
+    line_remove_char(line, cursor.j-1);
 }
 
 void line_remove_char(Line *line, size_t index) {
@@ -153,13 +158,13 @@ void line_remove_char(Line *line, size_t index) {
 }
 
 void entry_doc_enter(EntryDoc *entry_doc) {
-    Index *cursor = &entry_doc->cursor;
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
 
-    Line *line = entry_doc_get_line(entry_doc, cursor->i);
-    Line slice = line_slice(line, cursor->j);
-    line->length = cursor->j;
-    entry_doc_insert_line(entry_doc, &slice, cursor->i+1);
-    entry_doc_move_cursor(entry_doc, cursor->i+1, 0);
+    Line *line = entry_doc_get_line(entry_doc, cursor.i);
+    Line slice = line_slice(line, cursor.j);
+    line->length = cursor.j;
+    entry_doc_insert_line(entry_doc, &slice, cursor.i+1);
+    entry_doc_move_cursor(entry_doc, cursor.i+1, 0);
 }
 
 
@@ -228,46 +233,32 @@ The view will check the actually line length
 and render the cursor at MIN(line.length, cursor.j index)
 
 */
-void entry_doc_cursor_up(EntryDoc *entry_doc, bool limit_range) {
-    Index *cursor = &entry_doc->cursor;
-    if (limit_range && cursor->i == 0) {
-        return;
-    }
-    cursor->i--;
+void entry_doc_cursor_up(EntryDoc *entry_doc) {
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
+    entry_doc->cursor.i = max(0, cursor.i-1);
 }
 
-void entry_doc_cursor_down(EntryDoc *entry_doc, bool limit_range) {
-    Index *cursor = &entry_doc->cursor;
-    if (limit_range && cursor->i == entry_doc->line_count-1) {
-        return;
-    }
-    cursor->i++;
+void entry_doc_cursor_down(EntryDoc *entry_doc) {
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
+    entry_doc->cursor.i = min(entry_doc->line_count-1, cursor.i+1);
 }
 
-void entry_doc_cursor_left(EntryDoc *entry_doc, bool limit_range) {
-    Index *cursor = &entry_doc->cursor;
-    Line *line = &entry_doc->lines[cursor->i];
-    if (limit_range && cursor->j == 0) {
-        return;
-    }
-    // handle cursor j-index out of range for current line
-    cursor->j = (cursor->j < line->length) ? cursor->j-1 : line->length-1; 
+void entry_doc_cursor_left(EntryDoc *entry_doc) {
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
+    entry_doc->cursor.j = max(0, cursor.j-1);
 }
 
-void entry_doc_cursor_right(EntryDoc *entry_doc, bool limit_range) {
-    Index *cursor = &entry_doc->cursor;
-    Line *line = &entry_doc->lines[cursor->i];
-    if (limit_range && cursor->j == line->length) {
-        return;
-    }
-    cursor->j++;
+void entry_doc_cursor_right(EntryDoc *entry_doc) {
+    Index cursor = entry_doc_get_effective_cursor(entry_doc);
+    Line *line = entry_doc_get_line(entry_doc, cursor.i);
+    entry_doc->cursor.j = min(line->length, cursor.j+1);
 }
 
 /*
 Returns the physical cursor location in the document
 limits the logical cursor (entry_doc->cursor) column index by the current line length
 */
-Index entry_doc_get_cursor(EntryDoc *entry_doc) {
+Index entry_doc_get_effective_cursor(EntryDoc *entry_doc) {
     Index cursor = entry_doc->cursor;
     size_t line_length = entry_doc_get_line(entry_doc, cursor.i)->length;
     if (cursor.j > line_length) {
@@ -314,3 +305,6 @@ void free_entry_doc(EntryDoc *entry_doc) {
 void free_line(Line *line) {
     free(line->chars);
 }
+
+int min(int a, int b) { return a < b ? a : b; }
+int max(int a, int b) { return a > b ? a : b; }

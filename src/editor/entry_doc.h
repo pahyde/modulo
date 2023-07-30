@@ -43,12 +43,12 @@ void entry_doc_insert_char(EntryDoc *entry_doc, char c);
 void entry_doc_backspace(EntryDoc *entry_doc);
 void entry_doc_enter(EntryDoc *entry_doc);
 
-void entry_doc_cursor_up(EntryDoc *entry_doc, bool limit_range);
-void entry_doc_cursor_down(EntryDoc *entry_doc, bool limit_range);
-void entry_doc_cursor_left(EntryDoc *entry_doc, bool limit_range);
-void entry_doc_cursor_right(EntryDoc *entry_doc, bool limit_range);
+void entry_doc_cursor_up(EntryDoc *entry_doc);
+void entry_doc_cursor_down(EntryDoc *entry_doc);
+void entry_doc_cursor_left(EntryDoc *entry_doc);
+void entry_doc_cursor_right(EntryDoc *entry_doc);
 
-Index entry_doc_get_cursor(EntryDoc *entry_doc);
+Index entry_doc_get_effective_cursor(EntryDoc *entry_doc);
 Line *entry_doc_get_line(EntryDoc *entry_doc, size_t index);
 
 void entry_doc_clear(EntryDoc *entry_doc);
