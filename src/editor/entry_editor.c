@@ -29,8 +29,8 @@ void entry_editor_start(Modulo *modulo, OSContext *c) {
     int screen_h, screen_w;
     screen_init(&screen_h, &screen_w);
 
-    ScreenModel *screen_model = create_screen_model(screen_h, screen_w);
-    EntryDoc *entry_doc = create_entry_doc();
+    EntryDoc *entry_doc = create_entry_doc(modulo);
+    ScreenModel *screen_model = create_screen_model(entry_doc, screen_h, screen_w);
 
     WINDOW *doc_win = view_init_doc_window(screen_model);
     WINDOW *summary_win = view_init_summary_window(screen_model);
@@ -55,7 +55,7 @@ void entry_editor_start(Modulo *modulo, OSContext *c) {
                 model_handle_entry_submit(modulo, c, screen_model, entry_doc);
                 break;
             case RESIZE:
-                model_handle_resize(modulo, screen_model);
+                model_handle_resize(modulo, screen_model, entry_doc);
                 break;
             case BACKSPACE:
                 model_handle_backspace(modulo, screen_model, entry_doc);

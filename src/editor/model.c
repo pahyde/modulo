@@ -10,15 +10,17 @@
 static void remove_exit_delim(Modulo *modulo, EntryDoc *entry_doc);
 static void remove_entry_delim(Modulo *modulo, EntryDoc *entry_doc);
 static void submit_entry(Modulo *modulo, EntryDoc *entry_doc);
-static void log_updates(ScreenModel *screen_model, bool doc_updated, bool summary_updated);
+static void log_doc_update(ScreenModel *screen_model);
+static void log_summary_update(ScreenModel *screen_model);
 static void save_modulo_or_exit(Modulo *modulo, OSContext *c);
 
 static bool is_empty(EntryDoc *entry_doc);
 static char *entry_doc_to_string(EntryDoc *entry_doc);
+static int max(int a, int b);
 
 void model_reset(ScreenModel *screen_model) {
-    WindowModel *doc_model = &screen_model->doc_model;
-    WindowModel *summary_model = &screen_model->summary_model;
+    DocModel *doc_model = &screen_model->doc_model;
+    SummaryModel *summary_model = &screen_model->summary_model;
     doc_model->content_update = false;
     doc_model->size_update = false;
     summary_model->content_update = false;
@@ -39,24 +41,24 @@ void model_handle_entry_submit(Modulo *modulo, OSContext *c, ScreenModel *screen
     submit_entry(modulo, entry_doc);
     save_modulo_or_exit(modulo, c);
     entry_doc_clear(entry_doc);
-    log_content_update(&screen_model->doc_model);
-    log_content_update(&screen_model->summary_model);
+    log_doc_update(screen_model);
+    log_summary_update(screen_model);
 }
 
-void model_handle_resize(Modulo *modulo, ScreenModel *screen_model) {
+void model_handle_resize(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc) {
     int screen_h, screen_w;
     getmaxyx(stdscr, screen_h, screen_w);
-    screen_model_resize(screen_model, screen_h, screen_w);
+    screen_model_resize(screen_model, entry_doc, screen_h, screen_w);
 }
 
 void model_handle_backspace(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc) {
     entry_doc_backspace(entry_doc);
-    log_content_update(&screen_model->doc_model);
+    log_doc_update(screen_model);
 }
 
 void model_handle_enter(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc) {
     entry_doc_enter(entry_doc);
-    log_content_update(&screen_model->doc_model);
+    log_doc_update(screen_model);
 }
 
 void model_handle_cursor_move(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc, int dir) {
@@ -78,24 +80,28 @@ void model_handle_cursor_move(Modulo *modulo, ScreenModel *screen_model, EntryDo
             fprintf(stderr, "Unrecognized cursor move event\n");
             exit(EXIT_FAILURE);
     }
-    log_content_update(&screen_model->doc_model);
+    log_doc_update(screen_model);
 }
 
 void model_handle_char_input(Modulo *modulo, ScreenModel *screen_model, EntryDoc *entry_doc, char input) {
     entry_doc_insert_char(entry_doc, input);
-    log_content_update(&screen_model->doc_model);
+    log_doc_update(screen_model);
 }
 
 void model_handle_no_event(ScreenModel *screen_model) { return; }
 
 void model_check_scroll(ScreenModel *screen_model, EntryDoc *entry_doc) {
-    /*
-    entry_doc_header - height - width
-    entry_doc_content - height - width
+    Index cursor = entry_doc_get_cursor(entry_doc);
+    Index *scroll = &entry_doc->scroll;
+    SubWindow *entry_doc_content = &screen_model->doc_model.entry_content;
+    int content_height = entry_doc_content->height;
+    int content_width = entry_doc_content->width;
+    scroll->i = max(scroll->i, cursor.i - (content_height-1));
+    scroll->j = max(scroll->j, cursor.j - (content_width-1));
+}
 
-    wprint_header(2,3)
-    wprint_content(0,1)
-    */
+int max(int a, int b) {
+    return a > b ? a : b;
 }
     
 void save_modulo_or_exit(Modulo *modulo, OSContext *c) {
@@ -110,8 +116,12 @@ void submit_entry(Modulo *modulo, EntryDoc *entry_doc) {
     modulo_push_tomorrow(modulo, entry);
 }
 
-void log_content_update(WindowModel *win_model) {
-    win_model->content_update = true;
+void log_doc_update(ScreenModel *screen_model) {
+    screen_model->doc_model.content_update = true;
+}
+
+void log_summary_update(ScreenModel *screen_model) {
+    screen_model->summary_model.content_update = true;
 }
 
 void remove_exit_delim(Modulo *modulo, EntryDoc *entry_doc) {

@@ -2,8 +2,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "entry_doc.h"
+#include "../modulo.h"
 
 static void entry_doc_insert_line(EntryDoc *entry_doc, Line *line, size_t index);
 static Line entry_doc_remove_line(EntryDoc *entry_doc, size_t index);
@@ -20,23 +22,35 @@ static void check_line_capacity(EntryDoc *entry_doc);
 static void check_char_capacity(Line *line, size_t required);
 static void free_line(Line *line);
 
-EntryDoc *create_entry_doc() {
+EntryDoc *create_entry_doc(Modulo *modulo) {
     EntryDoc *entry_doc = malloc(sizeof(EntryDoc));
-    entry_doc->capacity = INIT_LINE_LENGTH_CAP;
+    entry_doc->capacity = INIT_LINE_COUNT_CAP;
     entry_doc->line_count = 1;
-    entry_doc->lines = malloc(INIT_LINE_LENGTH_CAP * sizeof(Line));
+    entry_doc->lines = malloc(INIT_LINE_COUNT_CAP * sizeof(Line));
     entry_doc->lines[0] = create_empty_line();
     entry_doc->cursor = (Index) { .i = 0, .j = 0 };
     entry_doc->scroll = (Index) { .i = 0, .j = 0 };
+    entry_doc->header = create_header(modulo);
+}
+
+Header create_header(Modulo *modulo) {
+    Header header;
+    header_printf(&header, "Modulo Entry Editor");
+    header_printf(&header, "");
+    header_printf(&header, "Type `%s` and press enter to submit.", modulo->entry_delimiter);
+    header_printf(&header, "Entry `%s` when you're done to save and exit", modulo->entry_delimiter);
+    header_printf(&header, "");
+}
+
+void header_printf(Header *header, char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    size_t *line_count = &header->line_count;
+    vsprintf(header->lines[(*line_count)++], format, args);
 }
 
 Line create_empty_line() {
-    Line empty_line = {
-        .capacity = INIT_LINE_LENGTH_CAP,
-        .length = 0,
-        .chars = malloc(INIT_LINE_LENGTH_CAP * sizeof(char))
-    };
-    return empty_line;
+    return create_line(INIT_LINE_LENGTH_CAP);
 }
 
 void line_insert_char(Line *line, char c, size_t index) {

@@ -8,6 +8,8 @@
 #include "../modulo.h"
 #include "screen_model.h"
 
+#define DOC_LINE_BUF_SIZE 512
+
 WINDOW *view_init_doc_window(ScreenModel *screen_model);
 WINDOW *view_init_summary_window(ScreenModel *screen_model);
 

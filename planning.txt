@@ -357,3 +357,11 @@ Your earliest wakeup time is approaching!
 
 It's currently 10:45 PM July 20, 2023.
 Your next wakeup is scheduled between 7:00 AM - 10:00 AM tomorrow.
+
+ ___   /\        
+|\__\ / /\       
+\|__|/ / /       
+    / / /___     
+   / / /|\__\    
+  |\/ / \|__|    
+   \|/         

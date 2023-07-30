@@ -12,6 +12,14 @@ typedef struct Index {
 #define INIT_LINE_LENGTH_CAP 128
 #define INIT_LINE_COUNT_CAP 8
 
+#define HEADER_MAX_LINES 8
+#define HEADER_MAX_LINE_LENGTH 128
+
+typedef struct Header {
+    size_t line_count;
+    char lines[HEADER_MAX_LINES][HEADER_MAX_LINE_LENGTH];
+} Header;
+
 typedef struct Line {
     size_t capacity;
     size_t length;
@@ -19,6 +27,7 @@ typedef struct Line {
 } Line;
 
 typedef struct EntryDoc {
+    Header header;
     size_t capacity;
     size_t line_count;
     Line *lines;
@@ -26,7 +35,7 @@ typedef struct EntryDoc {
     Index scroll;
 } EntryDoc;
 
-EntryDoc *create_entry_doc();
+EntryDoc *create_entry_doc(Modulo *modulo);
 
 void entry_doc_insert_char(EntryDoc *entry_doc, char c);
 void entry_doc_backspace(EntryDoc *entry_doc);
