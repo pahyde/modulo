@@ -22,6 +22,7 @@ static void resize_summary_entry_list_summary(SummaryModel *summary_model);
 
 static int horizontal_margin(SubWindow *sub_win);
 static int vertical_margin(SubWindow *sub_win);
+static size_t line_wrap_count(size_t length, size_t width);
 
 bool check_small_width(int width);
 
@@ -133,11 +134,20 @@ void resize_doc_header(DocModel *doc_model, EntryDoc *entry_doc) {
     int line_count = entry_doc->header.line_count;
     for (size_t i = 0; i < line_count; i++) {
         size_t length = strlen((*header_lines)[i]);
-        header_height += length / header->width;
+        header_height += line_wrap_count(length, header->width);
     }
     // underline
     header_height++;
     header->height = header_height;
+    header->height = line_count;
+}
+
+size_t line_wrap_count(size_t length, size_t width) {
+    size_t count = 1 + (length / width);
+    if (length != 0 && length % width == 0) {
+        count--;
+    }
+    return count;
 }
 
 void resize_doc_entry_content(DocModel *doc_model) {
@@ -170,8 +180,9 @@ void resize_summary_model(SummaryModel *summary_model, int screen_h, int screen_
 }
     
 void resize_summary_subwindows(SummaryModel *summary_model) {
-    void resize_summary_logo(summary_model);
-    void resize_summary_entry_list_summary(summary_model);
+    resize_summary_logo(summary_model);
+    resize_summary_logo(summary_model);
+    resize_summary_entry_list_summary(summary_model);
 }
 
 void resize_summary_logo(SummaryModel *summary_model) {

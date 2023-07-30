@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "../modulo.h"
+
 typedef struct Index {
     int i;
     int j;

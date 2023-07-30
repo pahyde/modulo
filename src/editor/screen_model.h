@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "entry_doc.h"
+
 #define WIDTH_BREAKPOINT 56
 
 #define SUMMARY_WIN_WIDTH 28

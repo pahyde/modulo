@@ -91,6 +91,7 @@ void model_handle_char_input(Modulo *modulo, ScreenModel *screen_model, EntryDoc
 void model_handle_no_event(ScreenModel *screen_model) { return; }
 
 void model_check_scroll(ScreenModel *screen_model, EntryDoc *entry_doc) {
+    return;
     Index cursor = entry_doc_get_cursor(entry_doc);
     Index *scroll = &entry_doc->scroll;
     SubWindow *entry_doc_content = &screen_model->doc_model.entry_content;

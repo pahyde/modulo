@@ -11,6 +11,8 @@ static void entry_doc_insert_line(EntryDoc *entry_doc, Line *line, size_t index)
 static Line entry_doc_remove_line(EntryDoc *entry_doc, size_t index);
 static void entry_doc_move_cursor(EntryDoc *entry_doc, int i, int j);
 
+Header create_header(Modulo *modulo);
+
 static Line create_line(size_t capacity);
 static void line_insert_char(Line *line, char c, size_t index);
 static void line_cat(Line *dest, Line *src);
@@ -31,15 +33,17 @@ EntryDoc *create_entry_doc(Modulo *modulo) {
     entry_doc->cursor = (Index) { .i = 0, .j = 0 };
     entry_doc->scroll = (Index) { .i = 0, .j = 0 };
     entry_doc->header = create_header(modulo);
+    return entry_doc;
 }
 
 Header create_header(Modulo *modulo) {
-    Header header;
+    Header header = { .line_count = 0 };
     header_printf(&header, "Modulo Entry Editor");
     header_printf(&header, "");
     header_printf(&header, "Type `%s` and press enter to submit.", modulo->entry_delimiter);
     header_printf(&header, "Entry `%s` when you're done to save and exit", modulo->entry_delimiter);
     header_printf(&header, "");
+    return header;
 }
 
 void header_printf(Header *header, char *format, ...) {

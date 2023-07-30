@@ -21,7 +21,7 @@ static int min(int a, int b);
 
 static void printf_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *fmt, ...);
 static void print_dim(WINDOW *win, SubWindow *sub_win);
-static void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc, size_t line_index);
+static void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc);
 static void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, Line *line);
 
 
@@ -62,6 +62,7 @@ void view_update_summary_window(WINDOW *summary_win, Modulo *modulo, SummaryMode
     box(summary_win, 0, 0);
     print_dim(summary_win, logo);
     print_dim(summary_win, entry_list_summary);
+    printf_win(summary_win, entry_list_summary, 1, 0, "height: %d, width: %d", summary_model->height, summary_model->width);
 }
 
 void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc, DocModel *doc_model) {
@@ -73,15 +74,14 @@ void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc
     SubWindow *entry_content = &doc_model->entry_content;
     // update content
     box(doc_win, 0, 0);
-    print_dim(doc_win, header);
-    print_dim(doc_win, entry_content);
+    print_entry_doc_content(doc_win, &doc_model->entry_content, entry_doc);
 }
 
 void print_dim(WINDOW *win, SubWindow *sub_win) {
     printf_win(win, sub_win, 0, 0, "height: %d, width: %d", sub_win->height, sub_win->width);
 }
 
-void view_render(WINDOW *doc_win, WINDOW *summary_win) {
+void view_render(WINDOW *doc_win, WINDOW *summary_win, EntryDoc *entry_doc) {
     //refresh();
     wnoutrefresh(summary_win);
     wnoutrefresh(doc_win);
@@ -130,7 +130,7 @@ bool stage_for_updates(WINDOW *win, int pos_y, int pos_x, int height, int width,
 }
 
 // TODO: max width and height
-void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc, size_t line_index) {
+void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc) {
     static char buffer[DOC_LINE_BUF_SIZE];
 
     int height = entry_content->height;
@@ -146,7 +146,7 @@ void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc
         size_t start_j = scroll->j;
         size_t end_j = min(scroll->j + width, line->length);
         // get visible slice and print to virt screen
-        cpy_line_slice(buffer, start_j, end_j, line);
+        cpy_line_slice(buffer, start_j, end_j, line->chars);
         // TODO > (2)
         printf_win(doc_win, entry_content, i, 0, buffer);
     }

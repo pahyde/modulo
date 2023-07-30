@@ -39,7 +39,7 @@ void entry_editor_start(Modulo *modulo, OSContext *c) {
         // update view from model
         view_update(doc_win, summary_win, modulo, screen_model, entry_doc);
         // Render view to terminal
-        view_render(doc_win, summary_win);
+        view_render(doc_win, summary_win, entry_doc);
 
         // Reset size and content update flags
         model_reset(screen_model);
