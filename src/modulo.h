@@ -1,11 +1,13 @@
 #ifndef MODULO_H
 #define MODULO_H
 
-#include "entry_list.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+
+#include "entry_list.h"
+#include "time_types.h"
+
 
 #define MODULO_USERNAME "username"
 #define MODULO_WAKEUP_EARLIEST "wakeup_earliest"
@@ -44,8 +46,8 @@ typedef struct Modulo {
     /* 
     User specified earliest and latest wakeup times
     */ 
-    int wakeup_earliest;
-    int wakeup_latest; 
+    clk_time_t wakeup_earliest;
+    clk_time_t wakeup_latest; 
     /* the delimiter typed indicate the end of an entry */
     char entry_delimiter[DELIMITER_MAX_LEN + 1];
     /*
@@ -86,8 +88,8 @@ void free_modulo(Modulo *modulo);
 
 // setters
 void modulo_set_username(Modulo *modulo, char *username);
-void modulo_set_wakeup_earliest(Modulo *modulo, time_t wakeup_earliest);
-void modulo_set_wakeup_latest(Modulo *modulo, time_t wakeup_latest);
+void modulo_set_wakeup_earliest(Modulo *modulo, clk_time_t wakeup_earliest);
+void modulo_set_wakeup_latest(Modulo *modulo, clk_time_t wakeup_latest);
 void modulo_set_entry_delimiter(Modulo *modulo, char *username);
 
 void modulo_set_day_ptr(Modulo *modulo, time_t day_ptr);
@@ -98,8 +100,8 @@ void modulo_set_history(Modulo *modulo, HistoryQueue history);
 
 // getters
 char *modulo_get_username(Modulo *modulo);
-time_t modulo_get_wakeup_earliest(Modulo *modulo);
-time_t modulo_get_wakeup_latest(Modulo *modulo);
+clk_time_t modulo_get_wakeup_earliest(Modulo *modulo);
+clk_time_t modulo_get_wakeup_latest(Modulo *modulo);
 char *modulo_get_entry_delimiter(Modulo *modulo);
 
 time_t modulo_get_day_ptr(Modulo *modulo);

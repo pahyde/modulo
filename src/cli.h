@@ -27,6 +27,10 @@ void cli_print_wakeup_success(Modulo *modulo);
 void cli_print_wakeup_failure(Modulo *modulo);
 void cli_print_time_status(Modulo *modulo);
 void cli_print_entry_lists_status(Modulo *modulo);
+void cli_print_today_entries(Modulo *modulo);
+
+void cli_print_history_status(HistoryQueue *history);
+void cli_print_history_item(HistoryQueue *history, int entry_list_index);
 
 Selection cli_prompt_preference_selection();
 

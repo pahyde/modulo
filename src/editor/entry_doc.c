@@ -45,7 +45,7 @@ Header create_header(Modulo *modulo) {
     header_printf(&header, "Modulo Entry Editor");
     header_printf(&header, "");
     header_printf(&header, "Type `%s` and press enter to submit.", modulo->entry_delimiter);
-    header_printf(&header, "Enter `%s` when you're done to save and exit.", modulo->entry_delimiter);
+    header_printf(&header, "Enter `%s%s` when you're done to save and exit.", modulo->entry_delimiter, modulo->entry_delimiter);
     header_printf(&header, "");
     header_printf(&header, "Entries:     %d written", modulo->tomorrow.size);
     header_printf(&header, "Next Wakeup: %s", wakeup_range_to_string(modulo));

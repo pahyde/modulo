@@ -43,7 +43,7 @@ bool entry_list_empty(EntryList *entry_list);
 
 //setters
 void entry_list_set_send_date(EntryList *entry_list, time_t send_date);
-void entry_list_set_recv_date(EntryList *entry_list, time_t send_date);
+void entry_list_set_recv_date(EntryList *entry_list, time_t recv_date);
 void entry_list_set_read_receipt(EntryList *entry_list, bool read_receipt);
 
 // getters

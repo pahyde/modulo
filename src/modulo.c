@@ -96,8 +96,8 @@ void modulo_set_username(Modulo *modulo, char *username) {
     strcpy(modulo->username, username);
 }
 
-void modulo_set_wakeup_earliest(Modulo *modulo, time_t wakeup) { modulo->wakeup_earliest = wakeup; }
-void modulo_set_wakeup_latest(Modulo *modulo, time_t wakeup) { modulo->wakeup_latest = wakeup; }
+void modulo_set_wakeup_earliest(Modulo *modulo, clk_time_t wakeup) { modulo->wakeup_earliest = wakeup; }
+void modulo_set_wakeup_latest(Modulo *modulo, clk_time_t wakeup) { modulo->wakeup_latest = wakeup; }
 
 void modulo_set_entry_delimiter(Modulo *modulo, char *entry_delimiter) {
     check_length(
@@ -129,8 +129,8 @@ void modulo_push_history(Modulo *modulo, EntryList *entry_list) {
 
 // getters
 char *modulo_get_username(Modulo *modulo) { return modulo->username; }
-time_t modulo_get_wakeup_earliest(Modulo *modulo) { return modulo->wakeup_earliest; }
-time_t modulo_get_wakeup_latest(Modulo *modulo) { return modulo->wakeup_latest; }
+clk_time_t modulo_get_wakeup_earliest(Modulo *modulo) { return modulo->wakeup_earliest; }
+clk_time_t modulo_get_wakeup_latest(Modulo *modulo) { return modulo->wakeup_latest; }
 char *modulo_get_entry_delimiter(Modulo *modulo) { return modulo->entry_delimiter; }
 
 time_t modulo_get_day_ptr(Modulo *modulo) { return modulo->day_ptr; }
@@ -174,7 +174,7 @@ void modulo_sync_forward(Modulo *modulo, int days) {
         return;
     }
     // set tomorrow.recv_date;
-    modulo->tomorrow.recv_date = utc_now();
+    entry_list_set_recv_date(&modulo->tomorrow, utc_now());
     // push today to history if non empty
     if (!entry_list_empty(&modulo->today)) {
         history_queue_push(&modulo->history, &modulo->today); 

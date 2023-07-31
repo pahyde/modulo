@@ -231,7 +231,7 @@ EntryList json_to_entry_list(cJSON *json) {
         return (EntryList) { .size = -1 };
     }
     // get recv_date
-    time_t recv_date = get_time_t_from_object(json, ENTRY_LIST_SEND_DATE);
+    time_t recv_date = get_time_t_from_object(json, ENTRY_LIST_RECV_DATE);
     if (send_date == -1) {
         return (EntryList) { .size = -1 };
     }

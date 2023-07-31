@@ -19,6 +19,8 @@ static void cli_gets(char *buffer, size_t buf_size);
 static void clear_stdin();
 
 static void cli_print_wakeup_error_message(char *wakeup);
+static void cli_print_entry(EntryList *entry_list, int index);
+static void cli_print_history_queue_summary(HistoryQueue *history);
 
 static void string_tolower(char *str);
 static bool length_ok(char *string, int max_length);
@@ -69,9 +71,51 @@ void cli_print_wakeup_success(Modulo *modulo) {
 }
 
 void cli_print_wakeup_failure(Modulo *modulo) {
+    printf("It's too early for that!\n\n");
+    printf("The current time is: %s\n", utc_to_string(utc_now(), false));
     printf("Your next wakeup range is scheduled for %s\n", wakeup_range_to_string(modulo));
-    printf_time("The current time %s is too early\n", utc_to_time(utc_now()));
     printf("\nRun `modulo set wakeup_earliest` or `modulo set preferences` to configure your wakeup range\n");
+}
+
+void cli_print_today_entries(Modulo *modulo) {
+    EntryList *today = &modulo->today;
+    if (today->size == 0) {
+        printf("No entries to review today.\n");
+        return;
+    }
+    printf("You have %d new entries to review today\n", today->size);
+    cli_print_entry_list(today);
+}
+
+void cli_print_entry_list(EntryList *entry_list) {
+    printf("sent: %s\n", utc_to_string(entry_list->send_date, true));
+    printf("recv: %s\n\n", utc_to_string(entry_list->recv_date, true));
+    int entry_count = entry_list->size;
+    for (int i = 0; i < entry_count; i++) {
+        cli_print_entry(entry_list, i);
+    }
+}
+
+void cli_print_history_status(HistoryQueue *history) {
+    printf("You have %d entries saved to your history queue.\n", history->size);
+    cli_print_history_queue_summary(history);
+    printf("\n");
+    printf("The history queue caches your %d most recently overwritten today lists.\n", HISTORY_QUEUE_LENGTH);
+    printf("Run `modulo history 1` to view the most recent\n");
+    printf("Run `modulo history %d` to view the oldest (next to be permanently discarded)\n", HISTORY_QUEUE_LENGTH); 
+}
+
+void cli_print_history_item(HistoryQueue *history, int entry_list_index) {
+    EntryList *entry_list = history_queue_get(history, entry_list_index);
+    printf("Reviewing history queue item %d\n", entry_list_index + 1);
+    cli_print_entry_list(entry_list);
+}
+
+void cli_print_entry(EntryList *entry_list, int index) {
+    int entry_number = index + 1;
+    printf("Entry %d\n", entry_number);
+    printf("---------\n");
+    printf("%s\n\n", entry_list_get(entry_list, index));
 }
 
 void cli_prompt_day_ptr(Modulo *modulo, time_t recent_wakeup_earliest, time_t recent_wakeup_latest) {
@@ -222,16 +266,26 @@ int cli_set_wakeup_earliest(Modulo *modulo, char *wakeup, bool show_prev) {
 }
 
 int cli_set_wakeup_latest(Modulo *modulo, char *wakeup, bool show_prev) {
-    int wakeup_time;
-    if ((wakeup_time = parse_time(wakeup)) == -1) {
+    clk_time_t wakeup_latest;
+    clk_time_t wakeup_earliest = modulo_get_wakeup_earliest(modulo);
+    if ((wakeup_latest = parse_time(wakeup)) == -1) {
         cli_print_wakeup_error_message(wakeup);
         return -1;
     }
-    int prev_wakeup = modulo_get_wakeup_latest(modulo);
-    modulo_set_wakeup_latest(modulo, wakeup_time);
-    printf_time("Successfully set latest wakeup to %s!\n", wakeup_time);
+    // get a copy of prev wakeup_latest before overwriting
+    // then update
+    clk_time_t prev_wakeup_latest = modulo_get_wakeup_latest(modulo);
+    modulo_set_wakeup_latest(modulo, wakeup_latest);
+
+    // set new_day_pointer to wakeup_latest occurring before next wakeup_earliest
+    time_t day_ptr = modulo_get_day_ptr(modulo);
+    time_t next_wakeup_earliest = time_to_utc_next(wakeup_earliest, day_ptr);
+    time_t new_day_ptr = time_to_utc_prev(wakeup_latest, next_wakeup_earliest);
+    modulo_set_day_ptr(modulo, new_day_ptr);
+
+    printf_time("Successfully set latest wakeup to %s!\n", wakeup_latest);
     if (show_prev) {
-        printf_time("Previous wakeup_latest: %s\n", prev_wakeup);
+        printf_time("Previous wakeup_latest: %s\n", prev_wakeup_latest);
     }
     return 0;
 }
@@ -408,10 +462,14 @@ void cli_print_entry_lists_status(Modulo *modulo) {
     printf("today    (inbox):  %d entries to review today\n", modulo->today.size);
     printf("tomorrow (outbox): %d entries written for tomorrow\n", modulo->tomorrow.size);
     printf("history: \n");
+    cli_print_history_queue_summary(&modulo->history);
+}
+
+void cli_print_history_queue_summary(HistoryQueue *history) {
     for (size_t i = 0; i < HISTORY_QUEUE_LENGTH; i++) {
-        if (i < modulo->history.size) {
-            EntryList *entry_list = &modulo->history.entry_lists[i];
-            printf("    %d. send date: %s\n", i+1, utc_to_string(entry_list->send_date, false));
+        if (i < history->size) {
+            EntryList *entry_list = &history->entry_lists[i];
+            printf("    %d. %s (sent)\n", i+1, utc_to_string(entry_list->send_date, false));
         } else {
             printf("    %d. -\n", i+1);
         }

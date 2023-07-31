@@ -10,7 +10,7 @@ static int parse_12_time(int hour, int minute, char *am_pm);
 static int parse_24_time(int hour, int minute);
 static char *tm_to_date_string(struct tm *date, struct tm *ref_date, bool use_relative_labels);
 static char *tm_to_time_string(struct tm *time_data);
-static struct tm increment_days(struct tm *date, int days);
+static struct tm increment_days(struct tm date, int days);
 static bool same_day(struct tm *date1, struct tm *date2);
 
 /*
@@ -291,25 +291,24 @@ char *tm_to_date_string(struct tm *date, struct tm *ref_date, bool use_relative_
     }
     // convert to relative date if applicable (e.g today, yesterday, tomorrow)
     struct tm *today = ref_date;
-    struct tm yesterday = increment_days(today, -1);
-    struct tm tomorrow = increment_days(today, 1);
+    struct tm yesterday = increment_days(*today, -1);
+    struct tm tomorrow = increment_days(*today, 1);
     if (same_day(date, today)) {
-        strcpy(fmt_string, today);
+        strcpy(fmt_string, TODAY);
     } else if (same_day(date, &yesterday)) {
         strcpy(fmt_string, YESTERDAY);
     } else if (same_day(date, &tomorrow)) {
         strcpy(fmt_string, TOMORROW);
     } else {
-        strftime(fmt_string, sizeof fmt_string, "%A, %B %d", today);
+        strftime(fmt_string, sizeof fmt_string, "%A, %B %d", date);
     }
     return fmt_string;
 }
 
-struct tm increment_days(struct tm *date, int days) {
+struct tm increment_days(struct tm date, int days) {
     // normalize incremented date
-    date->tm_mday += days;
-    time_t date_utc = mktime(date);
-    date->tm_mday -= days;
+    date.tm_mday += days;
+    time_t date_utc = mktime(&date);
     // convert back to localtime and return
     struct tm *incremented = localtime(&date_utc);
     return *incremented;

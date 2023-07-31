@@ -5,16 +5,11 @@
 #include <stdbool.h>
 
 #include "modulo.h"
+#include "time_types.h"
 
 #define TODAY "today"
 #define YESTERDAY "yesterday"
 #define TOMORROW "tomorrow"
-
-/* clock time in minutes */
-typedef int clk_time_t;
-
-/* offset from day_ptr in seconds */
-typedef int offset_t;
 
 #define FORMAT_TIME_LENGTH 16
 #define FORMAT_TIME_BUF_SIZE 64

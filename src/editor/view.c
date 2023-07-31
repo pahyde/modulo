@@ -115,7 +115,7 @@ void print_entry_previews(
         y_offset++;
     }
     // print placeholder for current entry
-    printf_win(summary_win, entry_list_summary, y_offset, 0, "%d. (IN PROGRESS)", end_idx+1);
+    printf_win(summary_win, entry_list_summary, y_offset, 0, "%d. (IN PROGRESS)", end_idx);
 }
 
 char *get_entry_preview(const char *entry) {

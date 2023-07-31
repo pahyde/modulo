@@ -104,7 +104,7 @@ void command_set_username(char *username) {
     Modulo *modulo = load_synced_modulo(c, false);
     check_init(modulo);
     if (cli_set_username(modulo, username, true) == -1) {
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     save_modulo_or_exit(modulo, c);
     free(modulo);
@@ -227,12 +227,11 @@ void command_status() {
 
 void command_tomorrow() {
     OSContext *c = get_context();
-    Modulo *modulo = load_synced_modulo(c, false);
+    Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
 
     entry_editor_start(modulo, c);
 
-    save_modulo_or_exit(modulo, c);
     free(modulo);
     free(c);
 }
@@ -242,7 +241,7 @@ void command_today() {
     Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
 
-    
+    cli_print_today_entries(modulo);  
 
     free(modulo);
     free(c);
@@ -305,6 +304,24 @@ void command_history(char *selection) {
     OSContext *c = get_context();
     Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
+
+    // parse history item number
+    int item_number;
+    sscanf(selection, "%d", &item_number);
+
+    HistoryQueue *history = &modulo->history;
+    uint8_t size = history->size;
+    if (size == 0) {
+        printf("Your history queue is empty!\n", size);
+        printf("Come back after you've used modulo a bit longer!\n");
+    } else if (item_number > size || item_number < 1) {
+        printf("You have %d old entry lists saved to your history queue.\n", size);
+        printf("Can't get item number: %d\n", item_number);
+    } else {
+        int index = item_number-1;
+        cli_print_history_item(history, index);
+    }
+
     free(modulo);
     free(c);
 }
@@ -313,6 +330,9 @@ void command_history_status() {
     OSContext *c = get_context();
     Modulo *modulo = load_synced_modulo(c, true);
     check_init(modulo);
+
+    cli_print_history_status(&modulo->history);
+
     free(modulo);
     free(c);
 }

@@ -4,6 +4,7 @@
 
 #include "../modulo.h"
 #include "../filesystem.h"
+#include "../time_utils.h"
 #include "entry_doc.h"
 #include "screen_model.h"
 
@@ -114,6 +115,7 @@ void save_modulo_or_exit(Modulo *modulo, OSContext *c) {
 void submit_entry(Modulo *modulo, EntryDoc *entry_doc) {
     char *entry = entry_doc_to_string(entry_doc);
     modulo_push_tomorrow(modulo, entry);
+    entry_list_set_send_date(modulo_get_tomorrow(modulo), utc_now());
 }
 
 void log_doc_update(ScreenModel *screen_model) {
@@ -152,7 +154,7 @@ char *entry_doc_to_string(EntryDoc *entry_doc) {
         size_t length = line->length;
         memcpy(&entry_string[start], line->chars, length);
         entry_string[start+length] = '\n';
-        start = length+1;
+        start += length+1;
     }
     entry_string[start] = '\0';
     return entry_string;
