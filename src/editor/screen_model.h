@@ -5,9 +5,9 @@
 
 #include "entry_doc.h"
 
-#define WIDTH_BREAKPOINT 56
+#define WIDTH_BREAKPOINT 64
 
-#define SUMMARY_WIN_WIDTH 28
+#define SUMMARY_WIN_WIDTH 22
 
 #define SUMMARY_WIN_PADDING 2
 #define DOC_WIN_PADDING 2
@@ -15,17 +15,17 @@
 
 // What is this, CSS ??
 #define HEADER_TOP 2
-#define HEADER_BOTTOM 2
+#define HEADER_BOTTOM 0
 #define HEADER_LEFT 2
 #define HEADER_RIGHT 2
 
-#define ENTRY_CONTENT_TOP 2
+#define ENTRY_CONTENT_TOP 0
 #define ENTRY_CONTENT_BOTTOM 2
 #define ENTRY_CONTENT_LEFT 2
 #define ENTRY_CONTENT_RIGHT 2
 
 #define LOGO_TOP 2
-#define LOGO_BOTTOM 2
+#define LOGO_BOTTOM 0
 #define LOGO_LEFT 2
 #define LOGO_RIGHT 2
 #define LOGO_HEIGHT 8

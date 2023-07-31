@@ -33,5 +33,6 @@ time_t utc_now();
 char *time_to_string(clk_time_t time_minutes);
 char *utc_to_string(time_t time_utc, bool use_relative_labels);
 char *utc_range_to_string(time_t start_utc, time_t end_utc);
+char *wakeup_range_to_string(Modulo *modulo);
 
 #endif

@@ -10,6 +10,10 @@
 
 #define DOC_LINE_BUF_SIZE 512
 
+#define ENTRY_PREVIEW_LENGTH 14
+
+#define LOGO_OFFSET_X 2
+
 WINDOW *view_init_doc_window(ScreenModel *screen_model);
 WINDOW *view_init_summary_window(ScreenModel *screen_model);
 

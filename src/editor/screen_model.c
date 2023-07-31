@@ -136,10 +136,9 @@ void resize_doc_header(DocModel *doc_model, EntryDoc *entry_doc) {
         size_t length = strlen((*header_lines)[i]);
         header_height += line_wrap_count(length, header->width);
     }
-    // underline
-    header_height++;
+    // underline +1, padding +2, entry number +1
+    header_height += 4;
     header->height = header_height;
-    header->height = line_count;
 }
 
 size_t line_wrap_count(size_t length, size_t width) {

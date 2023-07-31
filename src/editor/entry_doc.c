@@ -6,6 +6,7 @@
 
 #include "entry_doc.h"
 #include "../modulo.h"
+#include "../time_utils.h"
 
 static void entry_doc_insert_line(EntryDoc *entry_doc, Line *line, size_t index);
 static Line entry_doc_remove_line(EntryDoc *entry_doc, size_t index);
@@ -44,8 +45,10 @@ Header create_header(Modulo *modulo) {
     header_printf(&header, "Modulo Entry Editor");
     header_printf(&header, "");
     header_printf(&header, "Type `%s` and press enter to submit.", modulo->entry_delimiter);
-    header_printf(&header, "Entry `%s` when you're done to save and exit", modulo->entry_delimiter);
+    header_printf(&header, "Enter `%s` when you're done to save and exit.", modulo->entry_delimiter);
     header_printf(&header, "");
+    header_printf(&header, "Entries:     %d written", modulo->tomorrow.size);
+    header_printf(&header, "Next Wakeup: %s", wakeup_range_to_string(modulo));
     return header;
 }
 

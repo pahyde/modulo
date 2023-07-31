@@ -201,6 +201,13 @@ char *utc_to_string(time_t time_utc, bool use_relative_labels) {
     return fmt_string;
 }
 
+char *wakeup_range_to_string(Modulo *modulo) {
+    time_t day_ptr = modulo->day_ptr;
+    time_t next_wakeup_earliest = time_to_utc_next(modulo->wakeup_earliest, day_ptr);
+    time_t next_wakeup_latest = time_to_utc_next(modulo->wakeup_latest, next_wakeup_earliest);
+    return utc_range_to_string(next_wakeup_earliest, next_wakeup_latest);
+}
+
 char *utc_range_to_string(time_t start_utc, time_t end_utc) {
     // static wakeup range string
     static char range_fmt_string[FORMAT_TIME_BUF_SIZE];

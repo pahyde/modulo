@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "model.h"
 #include "entry_doc.h"
@@ -18,10 +19,18 @@ static void view_update_summary_window(WINDOW *summary_win, Modulo *modulo, Summ
 static void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc, DocModel *doc_model);
 
 static int min(int a, int b);
+static int max(int a, int b);
 
-static void printf_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *fmt, ...);
-static void print_dim(WINDOW *win, SubWindow *sub_win);
+static void print_entry_doc_header(WINDOW *doc_win, SubWindow *header, Modulo *modulo, EntryDoc *entry_doc);
 static void print_entry_doc_content(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc);
+static void print_modulo_logo(WINDOW *summary_win, SubWindow *logo);
+static void print_entry_summary(WINDOW *summary_win, SubWindow *entry_list_summary, Modulo *modulo);
+static char *get_entry_preview(const char *entry);
+static void printf_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *fmt, ...);
+static void print_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *line);
+static void print_dim(WINDOW *win, SubWindow *sub_win);
+static void hline_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, int width);
+
 static void doc_move_cursor(WINDOW *doc_win, SubWindow *entry_content, EntryDoc *entry_doc);
 static void cpy_line_slice(char *buffer, size_t start_j, size_t end_j, char *line);
 
@@ -61,9 +70,81 @@ void view_update_summary_window(WINDOW *summary_win, Modulo *modulo, SummaryMode
     SubWindow *entry_list_summary = &summary_model->entry_list_summary;
     // update content
     box(summary_win, 0, 0);
-    print_dim(summary_win, logo);
-    print_dim(summary_win, entry_list_summary);
-    printf_win(summary_win, entry_list_summary, 1, 0, "height: %d, width: %d", summary_model->height, summary_model->width);
+    print_modulo_logo(summary_win, logo);
+    print_entry_summary(summary_win, entry_list_summary, modulo);
+}
+
+void print_modulo_logo(WINDOW *summary_win, SubWindow *logo) {
+    print_win(summary_win, logo, 0, LOGO_OFFSET_X, " ___   /\\      ");
+    print_win(summary_win, logo, 1, LOGO_OFFSET_X, "|\\__\\ / /\\     ");
+    print_win(summary_win, logo, 2, LOGO_OFFSET_X, "\\|__|/ / /     ");
+    print_win(summary_win, logo, 3, LOGO_OFFSET_X, "    / / /___   ");
+    print_win(summary_win, logo, 4, LOGO_OFFSET_X, "   / / /|\\__\\  ");
+    print_win(summary_win, logo, 5, LOGO_OFFSET_X, "  |\\/ / \\|__|  ");
+    print_win(summary_win, logo, 6, LOGO_OFFSET_X, "   \\|/         ");
+}
+
+void print_entry_summary(WINDOW *summary_win, SubWindow *entry_list_summary, Modulo *modulo) {
+    print_win(summary_win, entry_list_summary, 0, 0, "Entries:");
+
+    int list_offset_y = 2;
+    int list_height = entry_list_summary->height - list_offset_y;
+
+    // choose start and end (exclusive) index 
+    // to accomodate for list of completed entries
+    // and an additional (IN PROGRESS) entry
+    size_t end_idx = modulo->tomorrow.size + 1;
+    size_t start_idx = max(0, end_idx - list_height);
+    print_entry_previews(summary_win, entry_list_summary, modulo, list_offset_y, start_idx, end_idx);
+}
+
+void print_entry_previews(
+    WINDOW *summary_win, 
+    SubWindow *entry_list_summary, 
+    Modulo *modulo, 
+    int list_offset_y, 
+    int start_idx, 
+    int end_idx
+) {
+    EntryList *tomorrow = &modulo->tomorrow;
+    // print complete entry previews
+    int y_offset = list_offset_y;
+    for (int i = start_idx; i < end_idx-1; i++) {
+        char *entry_preview = get_entry_preview(tomorrow->entries[i]);
+        printf_win(summary_win, entry_list_summary, y_offset, 0, "%d. %s", i+1, entry_preview);
+        y_offset++;
+    }
+    // print placeholder for current entry
+    printf_win(summary_win, entry_list_summary, y_offset, 0, "%d. (IN PROGRESS)", end_idx+1);
+}
+
+char *get_entry_preview(const char *entry) {
+    static char preview[ENTRY_PREVIEW_LENGTH];
+    char *c;
+    // skip leading spaces
+    for (c = entry; *c != '\0'; c++) {
+        if (!isspace(*c)) {
+            break;
+        }
+    }
+    size_t ellipsis_start = ENTRY_PREVIEW_LENGTH - 4;
+    strcpy(&preview[ellipsis_start], "...");
+
+    size_t length = strlen(c);
+    while (ellipsis_start > length) {
+        preview[--ellipsis_start] = '.';
+    }
+    for (int i = ellipsis_start-1; i >= 0; i--) {
+        if (!isspace(c[i])) {
+            break;
+        }
+        preview[i] = '.';
+        ellipsis_start = i;
+    }
+    for (size_t i = 0; i < ellipsis_start; i++) {
+        preview[i] = isspace(c[i]) ? ' ' : c[i];
+    }
+    return preview;
 }
 
 void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc, DocModel *doc_model) {
@@ -76,8 +157,9 @@ void view_update_doc_window(WINDOW *doc_win, Modulo *modulo, EntryDoc *entry_doc
     Index cursor = entry_doc_get_effective_cursor(entry_doc);
     // update content
     box(doc_win, 0, 0);
-    printf_win(doc_win, header, 0, 0, "cursor i: %d, j: %d", cursor.i, cursor.j);
-    printf_win(doc_win, header, 1, 0, "scroll i: %d, j: %d", entry_doc->scroll.i, entry_doc->scroll.j);
+    //printf_win(doc_win, header, 0, 0, "cursor i: %d, j: %d", cursor.i, cursor.j);
+    //printf_win(doc_win, header, 1, 0, "scroll i: %d, j: %d", entry_doc->scroll.i, entry_doc->scroll.j);
+    print_entry_doc_header(doc_win, &doc_model->header, modulo, entry_doc);
     print_entry_doc_content(doc_win, &doc_model->entry_content, entry_doc);
     doc_move_cursor(doc_win, entry_content, entry_doc);
 }
@@ -94,7 +176,7 @@ void view_render(WINDOW *doc_win, WINDOW *summary_win, EntryDoc *entry_doc) {
 }
 
 bool stage_doc_for_updates(WINDOW *doc_win, DocModel *doc_model) {
-    stage_for_updates(
+    return stage_for_updates(
         doc_win, 
         doc_model->pos_y,
         doc_model->pos_x,
@@ -106,7 +188,7 @@ bool stage_doc_for_updates(WINDOW *doc_win, DocModel *doc_model) {
 }
 
 bool stage_summary_for_updates(WINDOW *summary_win, SummaryModel *summary_model) {
-    stage_for_updates(
+    return stage_for_updates(
         summary_win, 
         summary_model->pos_y,
         summary_model->pos_x,
@@ -132,6 +214,23 @@ bool stage_for_updates(WINDOW *win, int pos_y, int pos_x, int height, int width,
         return true;
     }
     return false;
+}
+
+void print_entry_doc_header(WINDOW *doc_win, SubWindow *header, Modulo *modulo, EntryDoc *entry_doc) {
+    size_t line_count = entry_doc->header.line_count;
+    // This time no flex. Checkout screen_model.c:123 for the flex.
+    for (size_t i = 0; i < line_count; i++) {
+        print_win(doc_win, header, i, 0, entry_doc->header.lines[i]);
+    }
+    hline_win(doc_win, header, line_count, 0, header->width);
+    printf_win(doc_win, header, line_count+2, 0, "Entry %d.", modulo->tomorrow.size+1);
+}
+
+void hline_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, int width) {
+    int y = sub_win->pos_y + sub_win->top;
+    int x = sub_win->pos_x + sub_win->left;
+    wmove(win, y + offset_y, x + offset_x);
+    whline(win, ACS_HLINE, width);
 }
 
 // TODO: max width and height
@@ -181,7 +280,7 @@ void printf_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, con
     int y = sub_win->pos_y + sub_win->top;
     int x = sub_win->pos_x + sub_win->left;
     wmove(win, y + offset_y, x + offset_x);
-    vwprintw(win, fmt, args);
+    vw_printw(win, fmt, args);
 }
 
 void print_win(WINDOW *win, SubWindow *sub_win, int offset_y, int offset_x, const char *line) {

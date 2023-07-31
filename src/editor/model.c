@@ -150,7 +150,7 @@ char *entry_doc_to_string(EntryDoc *entry_doc) {
     for (size_t i = 0; i < line_count; i++) {
         Line *line = entry_doc_get_line(entry_doc, i);
         size_t length = line->length;
-        memcpy(&entry_string[start], line, length);
+        memcpy(&entry_string[start], line->chars, length);
         entry_string[start+length] = '\n';
         start = length+1;
     }

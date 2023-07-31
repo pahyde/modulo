@@ -20,8 +20,6 @@ static void clear_stdin();
 
 static void cli_print_wakeup_error_message(char *wakeup);
 
-static char *wakeup_range_to_string(Modulo *modulo);
-
 static void string_tolower(char *str);
 static bool length_ok(char *string, int max_length);
 
@@ -418,11 +416,4 @@ void cli_print_entry_lists_status(Modulo *modulo) {
             printf("    %d. -\n", i+1);
         }
     }
-}
-
-char *wakeup_range_to_string(Modulo *modulo) {
-    time_t day_ptr = modulo->day_ptr;
-    time_t next_wakeup_earliest = time_to_utc_next(modulo->wakeup_earliest, day_ptr);
-    time_t next_wakeup_latest = time_to_utc_next(modulo->wakeup_latest, next_wakeup_earliest);
-    return utc_range_to_string(next_wakeup_earliest, next_wakeup_latest);
 }

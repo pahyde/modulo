@@ -27,6 +27,7 @@ Modulo *load_modulo(OSContext *c) {
     cJSON *json = cJSON_Parse(json_str);
     // json to Modulo
     Modulo *modulo = json_to_modulo(json);
+    free(json_str);
     return modulo;
 }
 

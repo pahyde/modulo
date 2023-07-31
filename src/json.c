@@ -251,7 +251,9 @@ EntryList json_to_entry_list(cJSON *json) {
     }
     cJSON *string;
     cJSON_ArrayForEach(string, json_array) {
-        char *entry = string->valuestring;
+        // copy json entry string
+        char *entry = malloc(strlen(string->valuestring) + 1);
+        strcpy(entry, string->valuestring);
         if (!cJSON_IsString(string) || entry == NULL) {
             // Invalid string array element
             return (EntryList) { .size = -1 };
