@@ -6,8 +6,8 @@ Modulo is a productivity app for personal continuity.
 It's like a personal messaging system for sending thoughts to the future!
 
 In particular, Modulo syncs to your sleep schedule so you can
-1. send messages to tomorrow
-2. read messages from yesterday.
+1. Send messages to tomorrow
+2. Read messages from yesterday.
 
 
 ## Tomorrow
@@ -26,7 +26,21 @@ The `modulo wakeup` command tells Modulo that you're ready to start a new day.
 You can optionally omit this command if you wakeup later than your specified 'wakeup_latest' time 
 (configured in preferences). 
 
+## Building and Installation Guide
 
+The following should work on unix systems (linux, macOS, BSD)
+
+Modulo uses linked dependencies `ncurses` and `cJSON`. 
+Ensure these are installed. Then from the project's root directory run:
+
+```bash
+make
+make install
+```
+
+You will probably need `sudo make install` to avoid permissions issues.
+
+On success, this will build and install the project to /usr/local/bin/.
 
 
 
