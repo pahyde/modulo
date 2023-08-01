@@ -1,3 +1,5 @@
+modulo is a minimal productivity app designed for continuity! 
+It allows you to offload end-of-day thoughts, motivations, and goals onto tomorrows to-do list.
 TODO:
     - arg parsing 
         - using argc and argv

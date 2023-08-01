@@ -41,7 +41,7 @@ void model_handle_entry_submit(Modulo *modulo, OSContext *c, ScreenModel *screen
     remove_entry_delim(modulo, entry_doc);
     submit_entry(modulo, entry_doc);
     save_modulo_or_exit(modulo, c);
-    entry_doc_clear(entry_doc);
+    entry_doc_clear(modulo, entry_doc);
     log_doc_update(screen_model);
     log_summary_update(screen_model);
 }

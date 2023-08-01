@@ -287,7 +287,7 @@ void entry_doc_move_cursor(EntryDoc *entry_doc, int i, int j) {
     entry_doc->cursor.j = j;
 }
 
-void entry_doc_clear(EntryDoc *entry_doc) {
+void entry_doc_clear(Modulo *modulo, EntryDoc *entry_doc) {
     entry_doc->cursor = (Index) { .i = 0, .j = 0 };
     entry_doc->scroll = (Index) { .i = 0, .j = 0 };
     for (size_t i = 1; i < entry_doc->line_count; i++) {
@@ -295,6 +295,7 @@ void entry_doc_clear(EntryDoc *entry_doc) {
     }
     entry_doc->line_count = 1;
     entry_doc_get_line(entry_doc, 0)->length = 0;
+    entry_doc->header = create_header(modulo);
 }
 
 void free_entry_doc(EntryDoc *entry_doc) {

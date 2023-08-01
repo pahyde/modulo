@@ -1,4 +1,4 @@
-TARGET = main
+TARGET = modulo
 
 # Compiler
 CC = gcc
@@ -12,6 +12,8 @@ SRCDIR  := $(shell find ./src -type d)
 INCDIR  := $(SRCDIR)
 BINDIR  := ./bin
 DATADIR := $(HOME)/.config/modulo
+
+PREFIX = /usr/local
 
 # src files
 SRC := $(wildcard $(addsuffix /*.c, $(SRCDIR)))
@@ -33,9 +35,10 @@ init:
 	@rm -rf $(BINDIR)
 	@rm -rf $(DATADIR)
 
-.PHONY: all
-all: $(BINDIR)/$(TARGET)
-	@$(MAKE) -s run
+.PHONY: install
+install: $(BINDIR)/$(TARGET)
+	install -d $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 $(BINDIR)/$(TARGET) $(DESTDIR)$(PREFIX)/bin/
 
 $(BINDIR)/$(TARGET): $(SRC) $(INC)
 	@mkdir -p $(BINDIR)
