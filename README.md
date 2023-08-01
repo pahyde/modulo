@@ -12,7 +12,7 @@ In particular, Modulo syncs to your sleep schedule so you can
 Run the `modulo tomorrow` command to start writing your thoughts for tomorrow. 
 This will launch an interactive editor.
 
-![Tomorrow Demo](./img/tomorrow-demo.gif)
+![Tomorrow Demo](./img/DEMO-instructions.gif)
 
 ## Today
 The next day you can run the following sequence to review these entries:
