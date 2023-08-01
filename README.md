@@ -1,8 +1,6 @@
 # Modulo
 
-### Bridge the gap between today's thoughts and tomorrow's actions.
-
-Modulo is a productivity app for personal continuity. 
+Modulo is a productivity app designed to bridge the gap between today's thoughts and tomorrow's actions.  
 It's like a personal messaging system for sending thoughts to the future!
 
 In particular, Modulo syncs to your sleep schedule so you can
@@ -17,13 +15,13 @@ This will launch an interactive editor.
 ![Tomorrow Demo](./img/tomorrow-demo.gif)
 
 ## Today
-Then tomorrow, you can run the following sequence to review these entries:
+The next day you can run the following sequence to review these entries:
 
 `modulo wakeup`  
-`modulo tomorrow`
+`modulo today`
 
 The `modulo wakeup` command tells Modulo that you're ready to start a new day. 
-You can optionally omit this command if you wakeup later than your specified 'wakeup_latest' time 
+You can optionally omit this command if you run `modulo today` later than your specified 'wakeup_latest' time 
 (configured in preferences). 
 
 ## Building and Installation Guide
